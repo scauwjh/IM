@@ -1,4 +1,4 @@
-package com.java.mina.client;
+package com.java.mina.core.client;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
@@ -11,7 +11,9 @@ import org.apache.mina.filter.codec.textline.TextLineCodecFactory;
 import org.apache.mina.transport.socket.SocketConnector;
 import org.apache.mina.transport.socket.nio.NioSocketConnector;
 
+import com.java.mina.core.model.ReceivedBody;
 import com.java.mina.util.Debug;
+import com.java.mina.util.JsonUtil;
 
 public class MINAClient extends Thread {
 	
@@ -30,7 +32,6 @@ public class MINAClient extends Thread {
 	
 	public void client() {
 		Scanner in = new Scanner(System.in);
-		String msg = null;
 		Debug.println("enter a name for user: ");
 		String fromUser = in.next();
 		
@@ -42,16 +43,26 @@ public class MINAClient extends Thread {
 		future = connector.connect(new InetSocketAddress(ADDRESS, PORT));
 		future.awaitUninterruptibly();
 		session = future.getSession();
-		session.write(fromUser);
+		
+		sendMessage("login", fromUser, "123456");
 		
 		while(true) {
-			Debug.println("enter name@message or exit: ");
-			msg = in.next();
-			if (msg.equals("exit"))
+			Debug.println("enter name message or exit: ");
+			String toUser = in.next();
+			if (toUser.equals("exit"))
 				break;
-			session.write(msg);
+			String message = in.next();
+			sendMessage("send", toUser, message);
 		}
 		in.close();
+	}
+	
+	public void sendMessage(String method, String param1, String param2) {
+		ReceivedBody body = new ReceivedBody();
+		body.setMethod(method);
+		body.setParam1(param1);
+		body.setParam2(param2);
+		session.write(JsonUtil.toJson(body));
 	}
 	
 	@Override

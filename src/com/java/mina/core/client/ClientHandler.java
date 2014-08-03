@@ -1,4 +1,4 @@
-package com.java.mina.client;
+package com.java.mina.core.client;
 
 import org.apache.mina.core.service.IoHandlerAdapter;
 import org.apache.mina.core.session.IoSession;
@@ -30,5 +30,11 @@ public class ClientHandler extends IoHandlerAdapter {
 		throws Exception {
 		logger.error("exception throw: " + cause.getMessage());
 		cause.printStackTrace();
+	}
+	
+	@Override
+	public void sessionClosed(IoSession session) throws Exception {
+		logger.warn("lost connection from server");
+		Debug.println("lost connection from server");
 	}
 }

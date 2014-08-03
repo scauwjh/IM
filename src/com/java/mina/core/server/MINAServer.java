@@ -1,4 +1,4 @@
-package com.java.mina.server;
+package com.java.mina.core.server;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
