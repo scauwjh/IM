@@ -11,10 +11,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.java.mina.constant.Constant;
-import com.java.mina.core.model.ReceivedBody;
+import com.java.mina.core.model.Message;
+import com.java.mina.core.model.ReturnMessage;
+import com.java.mina.core.model.User;
 import com.java.mina.core.service.OfflineMessage;
 import com.java.mina.util.Debug;
-import com.java.mina.util.JsonUtil;
 import com.java.mina.util.lrucache.LRUCache;
 
 public class ServerHandler extends IoHandlerAdapter {
@@ -23,66 +24,81 @@ public class ServerHandler extends IoHandlerAdapter {
 	
 	private static HashMap<String, IoSession> sessions = new HashMap<String, IoSession>();
 	
-	private static LRUCache<String, List<String>> messageQueue = OfflineMessage.messageQueue;
+	private static LRUCache<String, List<Message>> messageQueue = OfflineMessage.messageQueue;
 	
-	// if id needed to process by other thread?
 	@Override
 	public void messageReceived(IoSession session, Object message) 
 			throws Exception {
 		session.setAttribute(Constant.HEARTBEAT_KEY, System.currentTimeMillis());
-		String msg = (String) message;
-		Debug.println("message received:\n" + msg);
-		if (msg.equals("")) {
-			Debug.println("heartbeat is received");
-			return;
-		}
-		ReceivedBody body = (ReceivedBody) JsonUtil.toObject(msg, ReceivedBody.class);
-		if (body == null) {
-			Debug.println("invalid request");
-			return;
-		}
-		String method = body.getMethod(); // method
-		String param1 = body.getParam1(); // user
-		String param2 = body.getParam2(); // password or message
-		// login
-		// login@user@password
-		if (method.equals("login")) {
+		if (message instanceof User) {
+			User user = (User) message;
+			String account = user.getUser();
+//			String password = user.getPassword();
 			// ..................................................
 			// add login service, need to get the offline message
 			// ..................................................
-			session.setAttribute(Constant.ACCOUNT, param1);
-			sessions.put(param1, session);
+			session.setAttribute(Constant.ACCOUNT, account);
+			sessions.put(account, session);
+			
+			// if needed to process it by other thread ?
+			List<Message> offlineMsg = messageQueue.get(account);
+			if (offlineMsg != null) {
+				Debug.println("login offline message list size: " + offlineMsg.size());
+				for (int i = 0; i < offlineMsg.size(); i++) {
+					session.write(offlineMsg.get(i));
+					Debug.println("write " + i);
+				}
+			}
 			return;
 		}
-		
 		// check login status
-		String fromUser = (String) session.getAttribute(Constant.ACCOUNT);
-		if (fromUser == null) {
-			String tmp = "no login status in this session: " + session.getRemoteAddress();
-			logger.warn(tmp);
-			Debug.println(tmp);
-			session.write("{\"ret\":\"-1\", \"msg\":\"no login status\"}");
+		String sessionUser = (String) session.getAttribute(Constant.ACCOUNT);
+		if (sessionUser == null) {
+			logger.warn("no login status in this session: " + session.getRemoteAddress());
+			Debug.println("no login status");
+			ReturnMessage ret = new ReturnMessage();
+			ret.setCode(-1);
+			ret.setMsg("no login status");
+			session.write(ret);
 			return;
 		}
-		// send message
-		// send@toUser@message
-		if (method.equals("send")) {
-			IoSession sendSess = sessions.get(param1);
-			Debug.println("a message received from: " + fromUser);
+		if (message instanceof Message) {
+			Message msg = (Message) message;
+			String sender = msg.getSender();
+			String receiver = msg.getReceiver();
+			// get the session of receiver
+			IoSession sendSess = sessions.get(receiver);
+			Debug.println("sender: " + sender + "\nsession user: " + sessionUser);
 			if (sendSess != null) {
-				sendSess.write("{\"from\":\"" + fromUser + "\", \"msg\":\"" + param2 + "\"}");// send message
-				Debug.println("message will send to: " + param1);
+				sendSess.write(msg);// send message
+				Debug.println("message will send to: " + receiver);
 			}
 			else {
 				// not online
-				Debug.println("session not exit");
-				List<String> list = messageQueue.get(param1);
+				Debug.println("receiver " + receiver + " not online");
+				List<Message> list = messageQueue.get(receiver);
 				if (list == null) {
-					list = new ArrayList<String>();
+					list = new ArrayList<Message>();
+					Debug.println("list is null");
 				}
-				list.add(param2);
-				messageQueue.put(param1, list); // save to messageQueue
+				list.add(msg);
+				Debug.println("offline message list size: " + list.size());
+				messageQueue.put(receiver, list); // save to messageQueue
 			}
+			return;
+		}
+		if (message instanceof String) {
+			Debug.println("heartbeat is received");
+			return;
+		}
+		if (message == null) {
+			logger.warn("invalid request from: " + session.getRemoteAddress());
+			Debug.println("invalid request");
+			ReturnMessage ret = new ReturnMessage();
+			ret.setCode(-1);
+			ret.setMsg("no login status");
+			session.write(ret);
+			return;
 		}
 	}
 	

@@ -1,19 +1,19 @@
 package com.java.mina.core.client;
 
 import java.net.InetSocketAddress;
-import java.nio.charset.Charset;
+import java.util.Date;
 import java.util.Scanner;
 
 import org.apache.mina.core.future.ConnectFuture;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
-import org.apache.mina.filter.codec.textline.TextLineCodecFactory;
 import org.apache.mina.transport.socket.SocketConnector;
 import org.apache.mina.transport.socket.nio.NioSocketConnector;
 
-import com.java.mina.core.model.ReceivedBody;
-import com.java.mina.util.Debug;
-import com.java.mina.util.JsonUtil;
+import com.java.mina.constant.Constant;
+import com.java.mina.core.filter.MyCharsetCodecFactory;
+import com.java.mina.core.model.Message;
+import com.java.mina.core.model.User;
 
 public class MINAClient extends Thread {
 	
@@ -32,37 +32,48 @@ public class MINAClient extends Thread {
 	
 	public void client() {
 		Scanner in = new Scanner(System.in);
-		Debug.println("enter a name for user: ");
-		String fromUser = in.next();
+		System.out.println("enter a name for user: ");
+		String sender = in.next();
 		
 		connector = new NioSocketConnector();
 		connector.setConnectTimeoutMillis(TIMEOUT);
 		connector.getFilterChain().addLast("codec", new ProtocolCodecFilter(
-				new TextLineCodecFactory(Charset.forName("UTF-8"))));
+				new MyCharsetCodecFactory()));
 		connector.setHandler(new ClientHandler());
 		future = connector.connect(new InetSocketAddress(ADDRESS, PORT));
 		future.awaitUninterruptibly();
 		session = future.getSession();
 		
-		sendMessage("login", fromUser, "123456");
+		login(sender, "123456");
 		
 		while(true) {
-			Debug.println("enter name message or exit: ");
-			String toUser = in.next();
-			if (toUser.equals("exit"))
+			System.out.println("enter name message or exit: ");
+			String receiver = in.next();
+			if (receiver.equals("exit"))
 				break;
 			String message = in.next();
-			sendMessage("send", toUser, message);
+			sendMessage(sender, receiver, message);
 		}
 		in.close();
 	}
 	
-	public void sendMessage(String method, String param1, String param2) {
-		ReceivedBody body = new ReceivedBody();
-		body.setMethod(method);
-		body.setParam1(param1);
-		body.setParam2(param2);
-		session.write(JsonUtil.toJson(body));
+	public void login(String account, String password) {
+		User user = new User();
+		user.setHeader(Constant.LOGIN);
+		user.setUser(account);
+		user.setPassword(password);
+		user.setTimeStamp(new Date().toString());
+		session.write(user);
+	}
+	
+	public void sendMessage(String sender, String receiver, String message) {
+		Message msg = new Message();
+		msg.setHeader(Constant.SEND);
+		msg.setSender(sender);
+		msg.setReceiver(receiver);
+		msg.setMessage(message);
+		msg.setTimeStamp(new Date().toString());
+		session.write(msg);
 	}
 	
 	@Override

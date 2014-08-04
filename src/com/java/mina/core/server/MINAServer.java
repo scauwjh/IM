@@ -2,18 +2,16 @@ package com.java.mina.core.server;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.charset.Charset;
 import java.util.concurrent.Executors;
 
 import org.apache.mina.core.service.IoAcceptor;
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
-import org.apache.mina.filter.codec.textline.TextLineCodecFactory;
 import org.apache.mina.filter.executor.ExecutorFilter;
 import org.apache.mina.filter.logging.LoggingFilter;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
 
-import com.java.mina.util.Debug;
+import com.java.mina.core.filter.MyCharsetCodecFactory;
 
 public class MINAServer extends Thread {
 	
@@ -32,10 +30,10 @@ public class MINAServer extends Thread {
 	public void server() throws IOException {
 		IoAcceptor acceptor = new NioSocketAcceptor();
 		// 日志过滤器
-		acceptor.getFilterChain().addLast("logger", new LoggingFilter());
+//		acceptor.getFilterChain().addLast("logger", new LoggingFilter());
 		// 编码解码过滤器
 		acceptor.getFilterChain().addLast("codec", new ProtocolCodecFilter(
-				new TextLineCodecFactory(Charset.forName("UTF-8"))));
+				new MyCharsetCodecFactory()));
 		// 多线程处理过滤器
 		acceptor.getFilterChain().addLast("threadPool", new ExecutorFilter(
 				Executors.newCachedThreadPool()));
@@ -43,7 +41,7 @@ public class MINAServer extends Thread {
 		acceptor.getSessionConfig().setReadBufferSize(BUFFER_SIZE);
 		acceptor.getSessionConfig().setIdleTime(IdleStatus.BOTH_IDLE, 10); // 10s
 		acceptor.bind(new InetSocketAddress(PORT)); // throw an IOException
-		Debug.println("port " + PORT + " is listening...");
+		System.out.println("port " + PORT + " is listening...");
 	}
 	
 	@Override
