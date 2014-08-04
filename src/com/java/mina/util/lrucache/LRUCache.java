@@ -81,19 +81,15 @@ public class LRUCache<K, V> {
 		if (node != null) {
 			// update link
 			detach(node);
-			attach(node);
+			if (!ifRemove()) {
+				attach(node);
+			} else {
+				map.remove(node.getKey());
+				freeEntrys.add(node);
+			}
 			return node.getValue();
 		}
 		return null;
-	}
-	
-	/**
-	 * <p>to deal with the oldest node tha detach
-	 * from the link by override this function</p>
-	 * @param node
-	 */
-	protected void remove(LRUEntry<K, V> node) {
-		
 	}
 	
 	/**
@@ -116,13 +112,38 @@ public class LRUCache<K, V> {
 		node.getNext().setPrev(node);
 	}
 	
+	/**
+	 * <p>to override this function for get method</p>
+	 * <p>return true for remove the node</p>
+	 * <p>return false for update node</p>
+	 * @return
+	 */
+	protected boolean ifRemove() {
+		return false;
+	}
+	
+	/**
+	 * <p>to override this function for put method</p>
+	 * <p>to deal with the oldest node tha detach
+	 * from the link by override this function</p>
+	 * @param node
+	 */
+	protected void remove(LRUEntry<K, V> node) {
+		
+	}
+	
 	
 	/**
 	 * main function for test
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		LRUCache<String, String> cache = new LRUCache<String, String>(3);
+		LRUCache<String, String> cache = new LRUCache<String, String>(3) {
+			@Override
+			protected boolean ifRemove() {
+				return true; // true to remove node when get method is called
+			}
+		};
 		Scanner in = new Scanner(System.in);
 		String method = null;
 		String value = null;

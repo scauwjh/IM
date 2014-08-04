@@ -27,6 +27,7 @@ public class ClientHandler extends IoHandlerAdapter {
 		} else if (message instanceof List) {
 			@SuppressWarnings("unchecked")
 			List<Message> msgList = (List<Message>) message;
+			Debug.println("message list received list size: " + msgList.size());
 			for (int i = 0; i < msgList.size(); i++) {
 				Message msg = msgList.get(i);
 				System.out.println("message received form: " + msg.getSender());

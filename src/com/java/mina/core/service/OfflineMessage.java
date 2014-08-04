@@ -16,6 +16,11 @@ public class OfflineMessage {
 	
 	public static LRUCache<String, List<Message>> messageQueue = new LRUCache<String, List<Message>>(100000) {
 		@Override
+		protected boolean ifRemove() {
+			return true; // true to remove the node when get method is called
+		}
+		
+		@Override
 		protected void remove(LRUEntry<String, List<Message>> node) {
 			logger.info("cache is full, remove and save the oldest message to DB");
 			Debug.println("cache is full...");

@@ -108,6 +108,7 @@ public class MyCharsetDecoder extends CumulativeProtocolDecoder {
 						msg.setMessage(message);
 						msg.setTimeStamp(timeStamp);
 						buffer.clear();
+						// messages at the same time would merge into one message 
 						if (in.hasRemaining()) {
 							msgList.add(msg);
 							ifList = true;
@@ -115,6 +116,7 @@ public class MyCharsetDecoder extends CumulativeProtocolDecoder {
 							line = 0;
 							continue;
 						} else if (ifList) {
+							msgList.add(msg);
 							out.write(msgList);
 						} else if (!ifList) {
 							out.write(msg);
