@@ -9,14 +9,20 @@ import org.apache.mina.filter.codec.ProtocolEncoder;
 
 public class MyCharsetCodecFactory implements ProtocolCodecFactory {
 
+	private Charset charset;
+	
+	public MyCharsetCodecFactory(String charset) {
+		this.charset = Charset.forName(charset);
+	}
+	
 	@Override
 	public ProtocolEncoder getEncoder(IoSession session) throws Exception {
-		return new MyCharsetEncoder(Charset.forName("UTF-8"));
+		return new MyCharsetEncoder(charset);
 	}
 
 	@Override
 	public ProtocolDecoder getDecoder(IoSession session) throws Exception {
-		return new MyCharsetDecoder(Charset.forName("UTF-8"));
+		return new MyCharsetDecoder(charset);
 	}
 
 }

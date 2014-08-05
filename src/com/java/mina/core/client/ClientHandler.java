@@ -1,14 +1,14 @@
 package com.java.mina.core.client;
 
-import java.util.List;
+import java.io.FileOutputStream;
 
 import org.apache.mina.core.service.IoHandlerAdapter;
 import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.java.mina.core.model.Image;
 import com.java.mina.core.model.Message;
-import com.java.mina.core.model.ReturnMessage;
 import com.java.mina.util.Debug;
 
 public class ClientHandler extends IoHandlerAdapter {
@@ -24,20 +24,16 @@ public class ClientHandler extends IoHandlerAdapter {
 			System.out.println("message received form: " + msg.getSender());
 			System.out.println("timeStamp: " + msg.getTimeStamp());
 			System.out.println("message:\n" + msg.getMessage());
-		} else if (message instanceof List) {
-			@SuppressWarnings("unchecked")
-			List<Message> msgList = (List<Message>) message;
-			Debug.println("message list received list size: " + msgList.size());
-			for (int i = 0; i < msgList.size(); i++) {
-				Message msg = msgList.get(i);
-				System.out.println("message received form: " + msg.getSender());
-				System.out.println("timeStamp: " + msg.getTimeStamp());
-				System.out.println("message:\n" + msg.getMessage());
-			}
-		} else if (message instanceof ReturnMessage) {
-			ReturnMessage ret = (ReturnMessage) message;
-			System.out.println("ret code: " + ret.getCode());
-			System.out.println("ret message: " + ret.getMsg());
+		} else if (message instanceof Image) {
+			Image msg = (Image) message;
+			System.out.println("message received form: " + msg.getSender());
+			System.out.println("timeStamp: " + msg.getTimeStamp());
+			String file = "C:\\Users\\asus\\Desktop\\rec.jpg";
+			FileOutputStream out = new FileOutputStream(file);
+			out.write(msg.getImage());
+			out.close();
+		} else if (message instanceof String) {
+			System.out.println(message);
 		}
 	}
 	
@@ -51,7 +47,7 @@ public class ClientHandler extends IoHandlerAdapter {
 	public void exceptionCaught(IoSession session, Throwable cause)
 		throws Exception {
 		logger.error("exception throw: " + cause.getMessage());
-		cause.printStackTrace();
+//		cause.printStackTrace();
 	}
 	
 	@Override

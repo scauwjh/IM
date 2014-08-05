@@ -2,27 +2,43 @@ package com.java.mina.core.model;
 
 import java.io.Serializable;
 
-public class Message implements Serializable {
+public class Image implements Serializable {
 	
 	private static final long serialVersionUID = 1L;
-
+	
 	private String header;
 	
 	private String sender;
 	
 	private String receiver;
 	
-	private String message;
+	private byte[] image;
 	
 	private String timeStamp;
 
-	
+
+	public String getTimeStamp() {
+		return timeStamp;
+	}
+
+	public void setTimeStamp(String timeStamp) {
+		this.timeStamp = timeStamp;
+	}
+
 	public String getHeader() {
 		return header;
 	}
 
 	public void setHeader(String header) {
 		this.header = header;
+	}
+
+	public byte[] getImage() {
+		return image;
+	}
+
+	public void setImage(byte[] image) {
+		this.image = image;
 	}
 
 	public String getSender() {
@@ -40,27 +56,11 @@ public class Message implements Serializable {
 	public void setReceiver(String receiver) {
 		this.receiver = receiver;
 	}
-
-	public String getMessage() {
-		return message;
-	}
-
-	public void setMessage(String message) {
-		this.message = message;
-	}
-
-	public String getTimeStamp() {
-		return timeStamp;
-	}
-
-	public void setTimeStamp(String timeStamp) {
-		this.timeStamp = timeStamp;
-	}
 	
 	public Integer getSize() {
 		return header.getBytes().length + sender.getBytes().length
-				+ receiver.getBytes().length + message.getBytes().length 
+				+ receiver.getBytes().length + image.length 
 				+ timeStamp.getBytes().length;
 	}
-
+	
 }

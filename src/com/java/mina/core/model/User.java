@@ -46,4 +46,9 @@ public class User implements Serializable {
 	public void setHeader(String header) {
 		this.header = header;
 	}
+	
+	public Integer getSize() {
+		return header.getBytes().length + user.getBytes().length
+				+ password.getBytes().length + timeStamp.getBytes().length;
+	}
 }

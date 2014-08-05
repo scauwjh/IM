@@ -2,9 +2,6 @@ package com.java.mina.constant;
 
 public class Constant {
 	
-	public static final String HEARTBEAT_KEY = "heartbeatKey";
-	
-	public static final String RECEIVED_BODY = "receivedBody";
 	/**
 	 * session超时：5min
 	 */
@@ -17,4 +14,10 @@ public class Constant {
 	public static final String HEARTBEAT = "heartbeat";
 	
 	public static final String SEND = "send";
+	
+	public static final String IMAGE = "image";
+	
+	public static final String DATA_LENGTH = "dataLength";
+	
+	public static final String STRING = "string";
 }

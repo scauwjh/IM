@@ -8,6 +8,8 @@ import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolEncoderAdapter;
 import org.apache.mina.filter.codec.ProtocolEncoderOutput;
 
+import com.java.mina.constant.Constant;
+import com.java.mina.core.model.Image;
 import com.java.mina.core.model.Message;
 import com.java.mina.core.model.User;
 
@@ -32,13 +34,26 @@ public class MyCharsetEncoder extends ProtocolEncoderAdapter {
 			buffer.putString(user.getPassword() + "\n", encoder);
 			buffer.putString(user.getTimeStamp() + "\n", encoder);
 		} else if (message instanceof Message) {
+			// send message
 			Message msg = (Message) message;
 			buffer.putString(msg.getHeader() + "\n", encoder);
 			buffer.putString(msg.getSender() + "\n", encoder);
 			buffer.putString(msg.getReceiver() + "\n", encoder);
 			buffer.putString(msg.getTimeStamp() + "\n", encoder);
-			buffer.putString(msg.getMessage().getBytes(charset).length + "\n", encoder);
+			buffer.putInt(msg.getMessage().getBytes().length);
 			buffer.putString(msg.getMessage() + "\n", encoder);
+		} else if (message instanceof Image) {
+			// send image
+			Image image = (Image) message;
+			buffer.putString(image.getHeader() + "\n", encoder);
+			buffer.putString(image.getSender() + "\n", encoder);
+			buffer.putString(image.getReceiver() + "\n", encoder);
+			buffer.putString(image.getTimeStamp() + "\n", encoder);
+			buffer.putInt(image.getImage().length);
+			buffer.put(image.getImage(), 0, image.getImage().length);
+		} else if (message instanceof String) {
+			buffer.putString(Constant.STRING + "\n", encoder);
+			buffer.putString((String) message + "\n", encoder);
 		}
 		buffer.flip();
 		out.write(buffer);
