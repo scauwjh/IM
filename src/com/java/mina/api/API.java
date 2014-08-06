@@ -1,23 +1,49 @@
 package com.java.mina.api;
 
-import com.java.mina.constant.GlobalResource;
+import org.apache.mina.core.session.IoSession;
 
-public class API {
+public interface API {
 	
 	/**
 	 * 服务器总在线人数
 	 * @return
 	 */
-	public static Integer onlineCount() {
-		return GlobalResource.userMap.size();
-	}
+	public Integer onlineCount();
 	
 	/**
 	 * 检查用户是否在线
 	 * @param account
 	 * @return
 	 */
-	public static Boolean ifOnline(String account) {
-		return GlobalResource.userMap.containsKey(account);
-	}
+	public Boolean ifOnline(String account);
+	
+	/**
+	 * 发送登录信息
+	 * @param session
+	 * @param account
+	 * @param password
+	 */
+	public void login(IoSession session, String account, String password);
+	
+	/**
+	 * 发送文字信息
+	 * @param session
+	 * @param sender
+	 * @param receiver
+	 * @param message
+	 */
+	public void sendMessage(IoSession session, String sender,
+			String receiver, String message);
+	
+	/**
+	 * 发送图片
+	 * @param session
+	 * @param sender
+	 * @param receiver
+	 * @param filePath
+	 * @return
+	 */
+	public boolean sendImage(IoSession session, String sender, 
+			String receiver, String filePath);
+	
 }
