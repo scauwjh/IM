@@ -1,7 +1,9 @@
-package com.java.mina.core.service;
+package com.java.mina.constant;
 
+import java.util.HashMap;
 import java.util.List;
 
+import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,9 +11,9 @@ import com.java.mina.util.Debug;
 import com.java.mina.util.lrucache.LRUCache;
 import com.java.mina.util.lrucache.LRUEntry;
 
-public class OfflineMessage {
+public class GlobalResource {
 	
-	private final static Logger logger = LoggerFactory.getLogger(OfflineMessage.class);
+	private final static Logger logger = LoggerFactory.getLogger(GlobalResource.class);
 	
 	public static LRUCache<String, List<Object>> messageQueue = new LRUCache<String, List<Object>>(100000) {
 		@Override
@@ -28,5 +30,7 @@ public class OfflineMessage {
 			// ...
 		}
 	};
+	
+	public static HashMap<String, IoSession> sessionMap = new HashMap<String, IoSession>();
 	
 }

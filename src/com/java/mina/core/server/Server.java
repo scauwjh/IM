@@ -13,22 +13,18 @@ import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.java.mina.constant.Constant;
 import com.java.mina.core.filter.MyCharsetCodecFactory;
 
-public class MINAServer extends Thread {
+public class Server extends Thread {
 	
-	public static final Logger logger = LoggerFactory.getLogger(MINAServer.class);
-	
-	public static Integer PORT;
+	public static final Logger logger = LoggerFactory.getLogger(Server.class);
 	
 	public static Integer BUFFER_SIZE;
 	
 	public static Integer SESSION_COUNT;
 	
-	private final static String CHARSET = "UTF-8";
-	
-	public MINAServer(Integer port, Integer bufferSize) {
-		PORT = port;
+	public Server(Integer bufferSize) {
 		BUFFER_SIZE = bufferSize;
 		SESSION_COUNT = 0;
 	}
@@ -39,15 +35,18 @@ public class MINAServer extends Thread {
 //		acceptor.getFilterChain().addLast("logger", new LoggingFilter());
 		// 编码解码过滤器
 		acceptor.getFilterChain().addLast("codec", new ProtocolCodecFilter(
-				new MyCharsetCodecFactory(CHARSET)));
+				new MyCharsetCodecFactory(Constant.CHARSET)));
 		// 多线程处理过滤器
 		acceptor.getFilterChain().addLast("threadPool", new ExecutorFilter(
 				Executors.newCachedThreadPool()));
 		acceptor.setHandler(new ServerHandler());
 		acceptor.getSessionConfig().setReadBufferSize(BUFFER_SIZE);
 		acceptor.getSessionConfig().setIdleTime(IdleStatus.BOTH_IDLE, 10); // 10s
-		acceptor.bind(new InetSocketAddress(PORT)); // throw an IOException
-		System.out.println("port " + PORT + " is listening...");
+		
+		acceptor.bind(new InetSocketAddress(Constant.TEXT_PORT)); // throw an IOException
+		acceptor.bind(new InetSocketAddress(Constant.IMAGE_PORT)); // throw an IOException
+		System.out.println("text port " + Constant.TEXT_PORT + " is listening...");
+		System.out.println("image port " + Constant.IMAGE_PORT + " is listening...");
 	}
 	
 	@Override
@@ -61,6 +60,6 @@ public class MINAServer extends Thread {
 	}
 	
 	public static void main(String[] args) {
-		new MINAServer(9999, 2048).start();
+		new Server(2048).start();
 	}
 }

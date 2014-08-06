@@ -11,11 +11,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.java.mina.constant.Constant;
+import com.java.mina.constant.GlobalResource;
 import com.java.mina.core.model.Image;
 import com.java.mina.core.model.Message;
-import com.java.mina.core.model.ReturnMessage;
 import com.java.mina.core.model.User;
-import com.java.mina.core.service.OfflineMessage;
+import com.java.mina.core.service.Login;
+import com.java.mina.util.AddressUtil;
 import com.java.mina.util.Debug;
 import com.java.mina.util.StringUtil;
 import com.java.mina.util.lrucache.LRUCache;
@@ -24,10 +25,15 @@ public class ServerHandler extends IoHandlerAdapter {
 	
 	protected static final Logger logger = LoggerFactory.getLogger(ServerHandler.class);
 	
-	private static HashMap<String, IoSession> sessions = new HashMap<String, IoSession>();
+	private static HashMap<String, IoSession> sessionMap = GlobalResource.sessionMap;
 	
-	private static LRUCache<String, List<Object>> messageQueue = OfflineMessage.messageQueue;
+	private static LRUCache<String, List<Object>> messageQueue = GlobalResource.messageQueue;
 	
+	/**
+	 * <p>server message service</p>
+	 * <p>error will return String object (json format)</p>
+	 * <p>other will return Message/Image/String object</p>
+	 */
 	@Override
 	public void messageReceived(IoSession session, Object message) 
 			throws Exception {
@@ -35,20 +41,23 @@ public class ServerHandler extends IoHandlerAdapter {
 		if (message instanceof User) {
 			User user = (User) message;
 			String account = user.getUser();
-//			String password = user.getPassword();
-			// ..................................................
-			// add login service, need to get the offline message
-			// ..................................................
-			session.setAttribute(Constant.ACCOUNT, account);
-			sessions.put(account, session);
+			String password = user.getPassword();
+			Login login = new Login();
+			if (!login.login(account, password)) {
+				session.write(StringUtil.returnMessage(-1, "login failed"));
+				return;
+			}
 			
-			// if needed to process it by other thread ?
+			// register the login status
+			account += AddressUtil.getPort(session);
+			session.setAttribute(Constant.ACCOUNT, account);
+			sessionMap.put(account, session);
+			
+			// send offline message
 			List<Object> offlineMsg = messageQueue.get(account);
 			if (offlineMsg != null) {
-				Debug.println("login offline message list size: " + offlineMsg.size());
 				for (int i = 0; i < offlineMsg.size(); i++) {
 					session.write(offlineMsg.get(i));
-					Debug.println("write " + i);
 				}
 			}
 			return;
@@ -57,7 +66,6 @@ public class ServerHandler extends IoHandlerAdapter {
 		String sessionUser = (String) session.getAttribute(Constant.ACCOUNT);
 		if (sessionUser == null) {
 			logger.warn("no login status in this session: " + session.getRemoteAddress());
-			Debug.println("no login status");
 			session.write(StringUtil.returnMessage(-1, "no login status"));
 			return;
 		}
@@ -66,7 +74,7 @@ public class ServerHandler extends IoHandlerAdapter {
 			String sender = msg.getSender();
 			String receiver = msg.getReceiver();
 			// get the session of receiver
-			IoSession sendSess = sessions.get(receiver);
+			IoSession sendSess = sessionMap.get(receiver + Constant.TEXT_PORT);
 			Debug.println("sender: " + sender + "\nsession user: " + sessionUser);
 			if (sendSess != null) {
 				sendSess.write(msg);// send message
@@ -75,14 +83,14 @@ public class ServerHandler extends IoHandlerAdapter {
 			else {
 				// not online
 				Debug.println("receiver " + receiver + " not online");
-				List<Object> list = messageQueue.get(receiver);
+				List<Object> list = messageQueue.get(receiver + Constant.TEXT_PORT);
 				if (list == null) {
 					list = new ArrayList<Object>();
 					Debug.println("list is null");
 				}
 				list.add(msg);
 				Debug.println("offline message list size: " + list.size());
-				messageQueue.put(receiver, list); // save to messageQueue
+				messageQueue.put(receiver + Constant.TEXT_PORT, list); // save to messageQueue
 			}
 			return;
 		}
@@ -91,7 +99,7 @@ public class ServerHandler extends IoHandlerAdapter {
 			String sender = msg.getSender();
 			String receiver = msg.getReceiver();
 			// get the session of receiver
-			IoSession sendSess = sessions.get(receiver);
+			IoSession sendSess = sessionMap.get(receiver + Constant.IMAGE_PORT);
 			Debug.println("sender: " + sender + "\nsession user: " + sessionUser);
 			if (sendSess != null) {
 				sendSess.write(msg);// send message
@@ -100,14 +108,14 @@ public class ServerHandler extends IoHandlerAdapter {
 			else {
 				// not online
 				Debug.println("receiver " + receiver + " not online");
-				List<Object> list = messageQueue.get(receiver);
+				List<Object> list = messageQueue.get(receiver + Constant.IMAGE_PORT);
 				if (list == null) {
 					list = new ArrayList<Object>();
 					Debug.println("list is null");
 				}
 				list.add(msg);
 				Debug.println("offline message list size: " + list.size());
-				messageQueue.put(receiver, list); // save to messageQueue
+				messageQueue.put(receiver + Constant.IMAGE_PORT, list); // save to messageQueue
 			}
 			return;
 		}
@@ -117,11 +125,7 @@ public class ServerHandler extends IoHandlerAdapter {
 		}
 		if (message == null) {
 			logger.warn("invalid request from: " + session.getRemoteAddress());
-			Debug.println("invalid request");
-			ReturnMessage ret = new ReturnMessage();
-			ret.setCode(-1);
-			ret.setMsg("no login status");
-			session.write(ret);
+			session.write(StringUtil.returnMessage(-1, "invalid request"));
 			return;
 		}
 	}
@@ -129,25 +133,26 @@ public class ServerHandler extends IoHandlerAdapter {
 	@Override
 	public void sessionIdle(IoSession session, IdleStatus status) 
 			throws Exception {
-		Object heartbeat = session.getAttribute(Constant.HEARTBEAT);
+		Long heartbeat = (Long) session.getAttribute(Constant.HEARTBEAT);
 		if (heartbeat != null && System.currentTimeMillis() 
-				- Long.valueOf(heartbeat.toString()) > Constant.SESSION_OVERTIME) {
+				- heartbeat > Constant.SESSION_OVERTIME) {
 			session.close(false);
-			Debug.println("a session is overtime");
+			logger.info("session from " + session.getRemoteAddress() + " is overtime");
 		}
 	}
 	
 	@Override
 	public void sessionCreated(IoSession session) 
 			throws Exception {
-		Debug.println("session created: " + ++MINAServer.SESSION_COUNT);
+		logger.info("session created: " + ++Server.SESSION_COUNT);
 		session.setAttribute(Constant.HEARTBEAT, System.currentTimeMillis());
 	}
 	
 	@Override
 	public void sessionClosed(IoSession session)
 			throws Exception {
-		Debug.println("session closed: " + --MINAServer.SESSION_COUNT);
+		logger.info("session closed: " + --Server.SESSION_COUNT);
+		sessionMap.remove(session.getAttribute(Constant.ACCOUNT));
 	}
 	
 	@Override
@@ -155,7 +160,6 @@ public class ServerHandler extends IoHandlerAdapter {
 			throws Exception {
 		logger.error("exception catch from " + session.getRemoteAddress());
 		logger.error(cause.getMessage());
-//		cause.printStackTrace();
 	}
 	
 }

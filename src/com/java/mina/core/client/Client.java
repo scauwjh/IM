@@ -17,24 +17,12 @@ import com.java.mina.core.filter.MyCharsetCodecFactory;
 import com.java.mina.core.model.Image;
 import com.java.mina.core.model.Message;
 import com.java.mina.core.model.User;
+import com.java.mina.util.Debug;
 import com.java.mina.util.ImageUtil;
 
-public class MINAClient extends Thread {
+public class Client extends Thread {
 	
 	private SocketConnector connector;
-	
-	private IoSession session;
-	
-	private ConnectFuture future;
-	
-	private final static Long TIMEOUT = 3000L;
-	
-	private final static Integer PORT = 9999;
-	
-	private final static String ADDRESS = "127.0.0.1";
-	
-	private final static String CHARSET = "UTF-8";
-	
 	
 	public void client() {
 		Scanner in = new Scanner(System.in);
@@ -42,16 +30,28 @@ public class MINAClient extends Thread {
 		String sender = in.next();
 		
 		connector = new NioSocketConnector();
-		connector.setConnectTimeoutMillis(TIMEOUT);
+		connector.setConnectTimeoutMillis(Constant.CONNECT_TIMEOUT);
 		connector.getFilterChain().addLast("codec", new ProtocolCodecFilter(
-				new MyCharsetCodecFactory(CHARSET)));
+				new MyCharsetCodecFactory(Constant.CHARSET)));
 		connector.setHandler(new ClientHandler());
-		future = connector.connect(new InetSocketAddress(ADDRESS, PORT));
-		future.awaitUninterruptibly();
-		session = future.getSession();
 		
-//		login(sender, "123456");
+		// connect to image port
+		ConnectFuture textFuture = connector.connect(new InetSocketAddress(
+				Constant.REMOTE_ADDRESS, Constant.TEXT_PORT));
+		textFuture.awaitUninterruptibly();
+		IoSession font = textFuture.getSession();
 		
+		// connect to image port
+		ConnectFuture imageFuture = connector.connect(new InetSocketAddress(
+				Constant.REMOTE_ADDRESS, Constant.IMAGE_PORT));
+		imageFuture.awaitUninterruptibly();
+		IoSession image = imageFuture.getSession();
+		
+		// login
+		login(font, sender, "123456");
+		login(image, sender, "123456");
+		
+		// send message service
 		while(true) {
 			System.out.println("enter name message or exit: ");
 			String receiver = in.next();
@@ -60,18 +60,16 @@ public class MINAClient extends Thread {
 			String message = in.next();
 			if (message.equals("image")) {
 				String path = "C:\\Users\\asus\\Desktop\\123.png";
-				try {
-					sendImage(sender, receiver, path);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+				// use multiple thread to finish the service
+				sendImage(image, sender, receiver, path);
+				continue;
 			}
-			sendMessage(sender, receiver, message);
+			sendMessage(font, sender, receiver, message);
 		}
 		in.close();
 	}
 	
-	public void login(String account, String password) {
+	public void login(IoSession session, String account, String password) {
 		User user = new User();
 		user.setHeader(Constant.LOGIN);
 		user.setUser(account);
@@ -80,7 +78,9 @@ public class MINAClient extends Thread {
 		session.write(user);
 	}
 	
-	public void sendMessage(String sender, String receiver, String message) {
+	public void sendMessage(IoSession session, String sender,
+			String receiver, String message) {
+		Debug.println("send a message!");
 		Message msg = new Message();
 		msg.setHeader(Constant.SEND);
 		msg.setSender(sender);
@@ -90,17 +90,21 @@ public class MINAClient extends Thread {
 		session.write(msg);
 	}
 	
-	public void sendImage(String sender,String receiver, String filePath) 
-			throws Exception {
+	public void sendImage(IoSession session, String sender, 
+			String receiver, String filePath) {
 		Image img = new Image();
 		img.setHeader(Constant.IMAGE);
 		img.setSender(sender);
 		img.setReceiver(receiver);
 		img.setTimeStamp(new Date().toString());
-		InputStream in = new FileInputStream(filePath);
-		byte[] dst = ImageUtil.imageCompress(in, 0.9, 1.0);
-		img.setImage(dst);
-		session.write(img);
+		try {
+			InputStream in = new FileInputStream(filePath);
+			byte[] dst = ImageUtil.imageCompress(in, 0.9, 1.0);
+			img.setImage(dst);
+			session.write(img);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	@Override
@@ -109,6 +113,6 @@ public class MINAClient extends Thread {
 	}
 	
 	public static void main(String[] args) {
-		new MINAClient().start();
+		new Client().start();
 	}
 }

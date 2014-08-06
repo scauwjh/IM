@@ -8,6 +8,8 @@ public class User implements Serializable {
 	
 	private String header;
 	
+	private String type;
+	
 	private String user;
 	
 	private String password;
@@ -50,5 +52,13 @@ public class User implements Serializable {
 	public Integer getSize() {
 		return header.getBytes().length + user.getBytes().length
 				+ password.getBytes().length + timeStamp.getBytes().length;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
 	}
 }

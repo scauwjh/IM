@@ -2,7 +2,7 @@ package com.java.mina.util;
 
 public class Debug {
 	
-	private final static Boolean IS_DEBUG = true;
+	private final static Boolean IS_DEBUG = false;
 	
 	public static void println(Object value) {
 		if (IS_DEBUG)
