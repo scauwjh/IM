@@ -8,6 +8,7 @@ import org.apache.mina.core.service.IoAcceptor;
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.executor.ExecutorFilter;
+import org.apache.mina.filter.logging.LoggingFilter;
 //import org.apache.mina.filter.logging.LoggingFilter;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
 import org.slf4j.Logger;
@@ -32,7 +33,7 @@ public class Server extends Thread {
 	public void server() throws IOException {
 		IoAcceptor acceptor = new NioSocketAcceptor();
 		// 日志过滤器
-//		acceptor.getFilterChain().addLast("logger", new LoggingFilter());
+		acceptor.getFilterChain().addLast("logger", new LoggingFilter());
 		// 编码解码过滤器
 		acceptor.getFilterChain().addLast("codec", new ProtocolCodecFilter(
 				new MyCharsetCodecFactory(Constant.CHARSET)));

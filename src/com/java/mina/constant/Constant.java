@@ -9,6 +9,8 @@ public class Constant {
 	
 	public static final String ACCOUNT = "account";
 	
+	public static final String SESSION_ACCOUNT = "session_account";
+	
 	public static final String LOGIN = "login";
 	
 	public static final String HEARTBEAT = "heartbeat";

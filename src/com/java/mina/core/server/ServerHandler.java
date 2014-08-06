@@ -16,6 +16,7 @@ import com.java.mina.core.model.Image;
 import com.java.mina.core.model.Message;
 import com.java.mina.core.model.User;
 import com.java.mina.core.service.Login;
+import com.java.mina.core.service.OfflineMessage;
 import com.java.mina.util.AddressUtil;
 import com.java.mina.util.Debug;
 import com.java.mina.util.StringUtil;
@@ -26,6 +27,8 @@ public class ServerHandler extends IoHandlerAdapter {
 	protected static final Logger logger = LoggerFactory.getLogger(ServerHandler.class);
 	
 	private static HashMap<String, IoSession> sessionMap = GlobalResource.sessionMap;
+	
+	private static HashMap<String, User> userMap = GlobalResource.userMap;
 	
 	private static LRUCache<String, List<Object>> messageQueue = GlobalResource.messageQueue;
 	
@@ -49,21 +52,30 @@ public class ServerHandler extends IoHandlerAdapter {
 			}
 			
 			// register the login status
-			account += AddressUtil.getPort(session);
+			userMap.put(account, user);
 			session.setAttribute(Constant.ACCOUNT, account);
+			
+			account += AddressUtil.getPort(session);
+			session.setAttribute(Constant.SESSION_ACCOUNT, account);
 			sessionMap.put(account, session);
 			
-			// send offline message
-			List<Object> offlineMsg = messageQueue.get(account);
-			if (offlineMsg != null) {
-				for (int i = 0; i < offlineMsg.size(); i++) {
-					session.write(offlineMsg.get(i));
+			// send offline message, message from cache or DB
+			List<Object> cacheMsg = messageQueue.get(account);
+			if (cacheMsg != null) {
+				for (int i = 0; i < cacheMsg.size(); i++) {
+					session.write(cacheMsg.get(i));
+				}
+			}
+			List<Object> dbMsg = new OfflineMessage().getOfflineMessage();
+			if (dbMsg != null) {
+				for (int i = 0; i < dbMsg.size(); i++) {
+					session.write(dbMsg.get(i));
 				}
 			}
 			return;
 		}
 		// check login status
-		String sessionUser = (String) session.getAttribute(Constant.ACCOUNT);
+		String sessionUser = (String) session.getAttribute(Constant.SESSION_ACCOUNT);
 		if (sessionUser == null) {
 			logger.warn("no login status in this session: " + session.getRemoteAddress());
 			session.write(StringUtil.returnMessage(-1, "no login status"));
@@ -151,8 +163,15 @@ public class ServerHandler extends IoHandlerAdapter {
 	@Override
 	public void sessionClosed(IoSession session)
 			throws Exception {
+		String sessionAccount = (String) session.getAttribute(Constant.SESSION_ACCOUNT);
+		String account = (String) session.getAttribute(Constant.ACCOUNT);
 		logger.info("session closed: " + --Server.SESSION_COUNT);
-		sessionMap.remove(session.getAttribute(Constant.ACCOUNT));
+		sessionMap.remove(sessionAccount);
+		if (!sessionMap.containsKey(account + Constant.TEXT_PORT) &&
+				!sessionMap.containsKey(account + Constant.IMAGE_PORT)) {
+			logger.info("user " + account + " is logout");
+			userMap.remove(account);
+		}
 	}
 	
 	@Override

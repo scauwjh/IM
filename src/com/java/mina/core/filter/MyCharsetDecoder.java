@@ -99,12 +99,6 @@ public class MyCharsetDecoder extends CumulativeProtocolDecoder {
 								in.reset();
 								return false;
 							}
-//							int port = AddressUtil.getPort(session);
-//							if (port == Constant.TEXT_PORT || port == Constant.IMAGE_PORT) {
-//								Debug.println("sleep!!!!!!");
-//								Thread.sleep(50000);
-//								Debug.println("end!!!!!!");
-//							}
 							byte[] dst = new byte[length + 1];
 							in.get(dst, 0, length);
 							Image img = new Image();
