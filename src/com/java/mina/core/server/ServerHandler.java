@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import com.java.mina.constant.Constant;
 import com.java.mina.constant.GlobalResource;
+import com.java.mina.core.model.Heartbeat;
 import com.java.mina.core.model.Image;
 import com.java.mina.core.model.Message;
 import com.java.mina.core.model.User;
@@ -79,6 +80,7 @@ public class ServerHandler extends IoHandlerAdapter {
 		if (sessionUser == null) {
 			logger.warn("no login status in this session: " + session.getRemoteAddress());
 			session.write(StringUtil.returnMessage(-1, "no login status"));
+			closeSession(session);
 			return;
 		}
 		if (message instanceof Message) {
@@ -131,7 +133,7 @@ public class ServerHandler extends IoHandlerAdapter {
 			}
 			return;
 		}
-		if (message instanceof String) {
+		if (message instanceof Heartbeat) {
 			Debug.println("heartbeat is received");
 			return;
 		}
@@ -148,7 +150,7 @@ public class ServerHandler extends IoHandlerAdapter {
 		Long heartbeat = (Long) session.getAttribute(Constant.HEARTBEAT);
 		if (heartbeat != null && System.currentTimeMillis() 
 				- heartbeat > Constant.SESSION_OVERTIME) {
-			session.close(false);
+			closeSession(session);
 			logger.info("session from " + session.getRemoteAddress() + " is overtime");
 		}
 	}
@@ -179,6 +181,10 @@ public class ServerHandler extends IoHandlerAdapter {
 			throws Exception {
 		logger.error("exception catch from " + session.getRemoteAddress());
 		logger.error(cause.getMessage());
+	}
+	
+	protected void closeSession(IoSession session) {
+		session.close(false);
 	}
 	
 }

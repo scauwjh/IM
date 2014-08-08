@@ -8,8 +8,11 @@ import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.CumulativeProtocolDecoder;
 import org.apache.mina.filter.codec.ProtocolDecoderOutput;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.java.mina.constant.Constant;
+import com.java.mina.core.model.Heartbeat;
 import com.java.mina.core.model.Image;
 import com.java.mina.core.model.Message;
 import com.java.mina.core.model.User;
@@ -17,6 +20,8 @@ import com.java.mina.util.Debug;
 
 public class MyCharsetDecoder extends CumulativeProtocolDecoder {
 
+	public final static Logger logger = LoggerFactory.getLogger(MyCharsetDecoder.class);
+	
 	private Charset charset;
 	
 	private CharsetDecoder decoder;
@@ -111,14 +116,28 @@ public class MyCharsetDecoder extends CumulativeProtocolDecoder {
 							break;
 						}
 					} else if (header.equals(Constant.HEARTBEAT)) {
-						out.write("");
-						break;
+						if (line == 1) {
+							user = getString();
+						}
+						else if (line == 2) {
+							timeStamp = getString();
+							Heartbeat hb = new Heartbeat();
+							hb.setHeader(header);
+							hb.setAccount(user);
+							hb.setTimeStamp(timeStamp);
+							out.write(hb);
+							break;
+						}
 					} else if (header.equals(Constant.STRING)){
-						out.write(getString());
+						String tmp = getString();
+						System.out.println(tmp);
+						out.write(tmp);
+						break;
 					}
 				} // end else if
 			} // end while
 		} catch (Exception e) {
+			logger.info("data may not enough in decoder");
 			in.reset();
 			return false;
 		}

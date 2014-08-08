@@ -39,7 +39,7 @@ public class ClientDemo extends Client {
 	}
 	
 	/**
-	 * 重写数据接收的方法
+	 * 重写string接收的方法
 	 */
 	@Override
 	public void stringReceived(String message) {
@@ -52,8 +52,9 @@ public class ClientDemo extends Client {
 		Scanner in = new Scanner(System.in);
 		System.out.println("enter a name for user: ");
 		String sender = in.next();
+		String password = "123456";
 		// login
-		client.login(sender, "123456");
+		client.login(sender, password);
 		
 		// send message service
 		while(true) {
@@ -65,7 +66,13 @@ public class ClientDemo extends Client {
 			if (message.equals("image")) {
 				String path = "C:\\Users\\asus\\Desktop\\tmp\\123.png";
 				// use multiple thread to finish the service
+				client.initImageSession(sender, password);
 				client.sendImage(sender, receiver, path);
+				continue;
+			}
+			if (message.equals("beat")) {
+				// send heartbeat
+				client.sendHeartbeat(sender);
 				continue;
 			}
 			client.sendMessage(sender, receiver, message);

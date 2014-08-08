@@ -36,6 +36,13 @@ public interface API {
 			String receiver, String message);
 	
 	/**
+	 * 发送心跳包
+	 * @param session
+	 * @param account
+	 */
+	public void sendHeartbeat(IoSession session, String account);
+	
+	/**
 	 * 发送图片
 	 * @param session
 	 * @param sender

@@ -8,6 +8,7 @@ import org.apache.mina.core.session.IoSession;
 
 import com.java.mina.constant.Constant;
 import com.java.mina.constant.GlobalResource;
+import com.java.mina.core.model.Heartbeat;
 import com.java.mina.core.model.Image;
 import com.java.mina.core.model.Message;
 import com.java.mina.core.model.User;
@@ -63,6 +64,19 @@ public class APIInstance implements API {
 		msg.setMessage(message);
 		msg.setTimeStamp(new Date().toString());
 		session.write(msg);
+	}
+	
+	/**
+	 * 发送心跳包
+	 * @param session
+	 * @param account
+	 */
+	public void sendHeartbeat(IoSession session, String account) {
+		Heartbeat hb = new Heartbeat();
+		hb.setAccount(account);
+		hb.setHeader(Constant.HEARTBEAT);
+		hb.setTimeStamp(new Date().toString());
+		session.write(hb);
 	}
 	
 	/**

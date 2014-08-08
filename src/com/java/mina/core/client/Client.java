@@ -72,6 +72,15 @@ public class Client {
 	 */
 	public void login(String user, String password) {
 		api.login(textSession, user, password);
+	}
+	
+	/**
+	 * <p>init image session</p>
+	 * <p>set image session login status</p>
+	 * @param user
+	 * @param password
+	 */
+	public void initImageSession(String user, String password) {
 		api.login(imageSession, user, password);
 	}
 	
@@ -83,6 +92,14 @@ public class Client {
 	 */
 	public void sendMessage(String sender, String receiver, String message) {
 		api.sendMessage(textSession, sender, receiver, message);
+	}
+	
+	/**
+	 * send heartbeat
+	 * @param account
+	 */
+	public void sendHeartbeat(String account) {
+		api.sendHeartbeat(textSession, account);
 	}
 	
 	/**

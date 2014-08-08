@@ -5,7 +5,7 @@ public class Constant {
 	/**
 	 * session overtime： 5min
 	 */
-	public static final Integer SESSION_OVERTIME = 300000;
+	public static final Integer SESSION_OVERTIME = 60000;//300000;
 	
 	public static final String ACCOUNT = "account";
 	

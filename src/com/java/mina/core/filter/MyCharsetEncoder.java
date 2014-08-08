@@ -9,6 +9,7 @@ import org.apache.mina.filter.codec.ProtocolEncoderAdapter;
 import org.apache.mina.filter.codec.ProtocolEncoderOutput;
 
 import com.java.mina.constant.Constant;
+import com.java.mina.core.model.Heartbeat;
 import com.java.mina.core.model.Image;
 import com.java.mina.core.model.Message;
 import com.java.mina.core.model.User;
@@ -51,9 +52,14 @@ public class MyCharsetEncoder extends ProtocolEncoderAdapter {
 			buffer.putString(image.getTimeStamp() + "\n", encoder);
 			buffer.putInt(image.getImage().length);
 			buffer.put(image.getImage(), 0, image.getImage().length);
+		} else if (message instanceof Heartbeat) {
+			Heartbeat hb = (Heartbeat) message;
+			buffer.putString(hb.getHeader() + "\n", encoder);
+			buffer.putString(hb.getAccount() + "\n", encoder);
+			buffer.putString(hb.getTimeStamp() + "\n", encoder);
 		} else if (message instanceof String) {
 			buffer.putString(Constant.STRING + "\n", encoder);
-			buffer.putString((String) message + "\n", encoder);
+			buffer.putString(message + "\n", encoder);
 		}
 		buffer.flip();
 		out.write(buffer);
