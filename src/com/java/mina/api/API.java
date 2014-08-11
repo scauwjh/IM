@@ -22,25 +22,29 @@ public interface API {
 	 * @param session
 	 * @param account
 	 * @param password
+	 * @return
 	 */
-	public void login(IoSession session, String account, String password);
+	public Boolean login(IoSession session, String account, String password);
 	
 	/**
 	 * 发送文字信息
 	 * @param session
 	 * @param sender
 	 * @param receiver
+	 * @param type
 	 * @param message
+	 * @return
 	 */
-	public void sendMessage(IoSession session, String sender,
-			String receiver, String message);
+	public Boolean sendMessage(IoSession session, String sender,
+			String receiver, Integer type, String message);
 	
 	/**
 	 * 发送心跳包
 	 * @param session
 	 * @param account
+	 * @return
 	 */
-	public void sendHeartbeat(IoSession session, String account);
+	public Boolean sendHeartbeat(IoSession session, String account);
 	
 	/**
 	 * 发送图片
@@ -50,7 +54,7 @@ public interface API {
 	 * @param filePath
 	 * @return
 	 */
-	public boolean sendImage(IoSession session, String sender, 
+	public Boolean sendImage(IoSession session, String sender, 
 			String receiver, String filePath);
 	
 }

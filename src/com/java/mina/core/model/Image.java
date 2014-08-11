@@ -57,10 +57,4 @@ public class Image implements Serializable {
 		this.receiver = receiver;
 	}
 	
-	public Integer getSize() {
-		return header.getBytes().length + sender.getBytes().length
-				+ receiver.getBytes().length + image.length 
-				+ timeStamp.getBytes().length;
-	}
-	
 }

@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Date;
 
+import org.apache.mina.core.future.ReadFuture;
 import org.apache.mina.core.session.IoSession;
 
 import com.java.mina.constant.Constant;
@@ -12,6 +13,7 @@ import com.java.mina.core.model.Heartbeat;
 import com.java.mina.core.model.Image;
 import com.java.mina.core.model.Message;
 import com.java.mina.core.model.User;
+import com.java.mina.util.Debug;
 import com.java.mina.util.ImageUtil;
 
 public class APIInstance implements API {
@@ -38,14 +40,28 @@ public class APIInstance implements API {
 	 * @param session
 	 * @param account
 	 * @param password
+	 * @return
 	 */
-	public void login(IoSession session, String account, String password) {
+	public Boolean login(IoSession session, String account, String password) {
 		User user = new User();
 		user.setHeader(Constant.LOGIN);
 		user.setUser(account);
 		user.setPassword(password);
 		user.setTimeStamp(new Date().toString());
-		session.write(user);
+		user.setStatus(0);
+		session.write(user).awaitUninterruptibly();
+		ReadFuture read = session.read();
+		if (read.awaitUninterruptibly(Constant.LOGIN_OVEROUT)) {
+			User retMsg = (User) read.getMessage();
+			if (retMsg.getStatus().equals(1)) {
+				return true;
+			} else {
+				return false;
+			}
+		} else {
+			Debug.println("Failed to connect");
+			return false;
+		}
 	}
 	
 	/**
@@ -54,29 +70,32 @@ public class APIInstance implements API {
 	 * @param sender
 	 * @param receiver
 	 * @param message
+	 * @return
 	 */
-	public void sendMessage(IoSession session, String sender,
-			String receiver, String message) {
+	public Boolean sendMessage(IoSession session, String sender,
+			String receiver, Integer type, String message) {
 		Message msg = new Message();
 		msg.setHeader(Constant.SEND);
 		msg.setSender(sender);
 		msg.setReceiver(receiver);
 		msg.setMessage(message);
+		msg.setType(type);
 		msg.setTimeStamp(new Date().toString());
-		session.write(msg);
+		return session.write(msg).isWritten();
 	}
 	
 	/**
 	 * 发送心跳包
 	 * @param session
 	 * @param account
+	 * @return
 	 */
-	public void sendHeartbeat(IoSession session, String account) {
+	public Boolean sendHeartbeat(IoSession session, String account) {
 		Heartbeat hb = new Heartbeat();
 		hb.setAccount(account);
 		hb.setHeader(Constant.HEARTBEAT);
 		hb.setTimeStamp(new Date().toString());
-		session.write(hb);
+		return session.write(hb).isWritten();
 	}
 	
 	/**
@@ -87,7 +106,7 @@ public class APIInstance implements API {
 	 * @param filePath
 	 * @return
 	 */
-	public boolean sendImage(IoSession session, String sender, 
+	public Boolean sendImage(IoSession session, String sender, 
 			String receiver, String filePath) {
 		Image img = new Image();
 		img.setHeader(Constant.IMAGE);
@@ -98,8 +117,7 @@ public class APIInstance implements API {
 			InputStream in = new FileInputStream(filePath);
 			byte[] dst = ImageUtil.imageCompress(in, 0.9, 1.0);
 			img.setImage(dst);
-			session.write(img);
-			return true;
+			return session.write(img).isWritten();
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;

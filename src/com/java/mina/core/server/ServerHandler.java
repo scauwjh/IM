@@ -1,6 +1,7 @@
 package com.java.mina.core.server;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -47,8 +48,11 @@ public class ServerHandler extends IoHandlerAdapter {
 			String account = user.getUser();
 			String password = user.getPassword();
 			Login login = new Login();
+			String randStr = StringUtil.randString(32);
 			if (!login.login(account, password)) {
-				session.write(StringUtil.returnMessage(-1, "login failed"));
+				user.setPassword(randStr);
+				user.setStatus(0);
+				session.write(user);
 				return;
 			}
 			
@@ -59,10 +63,14 @@ public class ServerHandler extends IoHandlerAdapter {
 			account += AddressUtil.getPort(session);
 			session.setAttribute(Constant.SESSION_ACCOUNT, account);
 			sessionMap.put(account, session);
+			user.setPassword(randStr);
+			user.setStatus(1);
+			session.write(user);
 			
 			// send offline message, message from cache or DB
 			List<Object> cacheMsg = messageQueue.get(account);
 			if (cacheMsg != null) {
+				Debug.println("offline message list size: " + cacheMsg.size());
 				for (int i = 0; i < cacheMsg.size(); i++) {
 					session.write(cacheMsg.get(i));
 				}
@@ -87,6 +95,8 @@ public class ServerHandler extends IoHandlerAdapter {
 			Message msg = (Message) message;
 			String sender = msg.getSender();
 			String receiver = msg.getReceiver();
+			// update timeStamp
+			msg.setTimeStamp(new Date().toString());
 			// get the session of receiver
 			IoSession sendSess = sessionMap.get(receiver + Constant.TEXT_PORT);
 			Debug.println("sender: " + sender + "\nsession user: " + sessionUser);
@@ -103,7 +113,6 @@ public class ServerHandler extends IoHandlerAdapter {
 					Debug.println("list is null");
 				}
 				list.add(msg);
-				Debug.println("offline message list size: " + list.size());
 				messageQueue.put(receiver + Constant.TEXT_PORT, list); // save to messageQueue
 			}
 			return;
@@ -112,6 +121,8 @@ public class ServerHandler extends IoHandlerAdapter {
 			Image msg = (Image) message;
 			String sender = msg.getSender();
 			String receiver = msg.getReceiver();
+			// update timeStamp
+			msg.setTimeStamp(new Date().toString());
 			// get the session of receiver
 			IoSession sendSess = sessionMap.get(receiver + Constant.IMAGE_PORT);
 			Debug.println("sender: " + sender + "\nsession user: " + sessionUser);
@@ -128,13 +139,15 @@ public class ServerHandler extends IoHandlerAdapter {
 					Debug.println("list is null");
 				}
 				list.add(msg);
-				Debug.println("offline message list size: " + list.size());
 				messageQueue.put(receiver + Constant.IMAGE_PORT, list); // save to messageQueue
 			}
 			return;
 		}
 		if (message instanceof Heartbeat) {
 			Debug.println("heartbeat is received");
+			Heartbeat hb = (Heartbeat) message;
+			hb.setTimeStamp(new Date().toString());
+			session.write(hb);
 			return;
 		}
 		if (message == null) {

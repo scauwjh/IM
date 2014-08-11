@@ -1,8 +1,10 @@
-package com.java.mina.core.client;
+package com.java.mina.demo;
 
 import java.io.FileOutputStream;
 import java.util.Scanner;
 
+import com.java.mina.core.client.Client;
+import com.java.mina.core.model.Heartbeat;
 import com.java.mina.core.model.Image;
 import com.java.mina.core.model.Message;
 import com.java.mina.util.StringUtil;
@@ -17,7 +19,8 @@ public class ClientDemo extends Client {
 		Message msg = (Message) message;
 		System.out.println("message received form: " + msg.getSender());
 		System.out.println("timeStamp: " + msg.getTimeStamp());
-		System.out.println("message:\n" + msg.getMessage());
+		System.out.println("type: " + msg.getType());
+		System.out.println("message: " + msg.getMessage());
 	}
 	
 	/**
@@ -44,6 +47,15 @@ public class ClientDemo extends Client {
 	@Override
 	public void stringReceived(String message) {
 		System.out.println("received retMsg from server: " + message);
+	}
+	
+	/**
+	 * 重写heartbeat接收的方法
+	 */
+	@Override
+	public void heartbeatReceived(Heartbeat message) {
+		System.out.println("received heartbeat from server and timestamp: " + message.getTimeStamp());
+		System.out.println("heartbeat for account: " + message.getAccount());
 	}
 	
 	
@@ -75,7 +87,7 @@ public class ClientDemo extends Client {
 				client.sendHeartbeat(sender);
 				continue;
 			}
-			client.sendMessage(sender, receiver, message);
+			client.sendMessage(sender, receiver, 1, message);
 		}
 		in.close();
 	}

@@ -2,10 +2,16 @@ package com.java.mina.constant;
 
 public class Constant {
 	
+	
+	public static final Long ONE_MINUTE_MILLIONSECOND = 60000L;
 	/**
 	 * session overtime： 5min
 	 */
-	public static final Integer SESSION_OVERTIME = 60000;//300000;
+	public static final Integer SESSION_OVERTIME = 300000;
+	/**
+	 * login overtime: 10s
+	 */
+	public static final Long LOGIN_OVEROUT = 10000L;
 	
 	public static final String ACCOUNT = "account";
 	
@@ -32,4 +38,6 @@ public class Constant {
 	public final static String CHARSET = "UTF-8";
 	
 	public final static Long CONNECT_TIMEOUT = 3000L;
+	
+	public final static Integer CACHE_SIZE = 100000;
 }

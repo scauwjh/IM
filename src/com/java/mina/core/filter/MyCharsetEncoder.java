@@ -34,6 +34,7 @@ public class MyCharsetEncoder extends ProtocolEncoderAdapter {
 			buffer.putString(user.getUser() + "\n", encoder);
 			buffer.putString(user.getPassword() + "\n", encoder);
 			buffer.putString(user.getTimeStamp() + "\n", encoder);
+			buffer.putInt(user.getStatus());
 		} else if (message instanceof Message) {
 			// send message
 			Message msg = (Message) message;
@@ -41,8 +42,9 @@ public class MyCharsetEncoder extends ProtocolEncoderAdapter {
 			buffer.putString(msg.getSender() + "\n", encoder);
 			buffer.putString(msg.getReceiver() + "\n", encoder);
 			buffer.putString(msg.getTimeStamp() + "\n", encoder);
+			buffer.putInt(msg.getType());
 			buffer.putInt(msg.getMessage().getBytes().length);
-			buffer.putString(msg.getMessage() + "\n", encoder);
+			buffer.putString(msg.getMessage(), encoder);
 		} else if (message instanceof Image) {
 			// send image
 			Image image = (Image) message;

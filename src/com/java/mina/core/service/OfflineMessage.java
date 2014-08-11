@@ -9,7 +9,7 @@ public class OfflineMessage {
 	public void saveOfflineMessage(LRUEntry<String, List<Object>> node) {
 		// to save the node(save the list of the node) to DB
 		// list object would be Message or Image
-		
+//		System.out.println("save!!!!");
 	}
 	
 	/**
@@ -20,6 +20,7 @@ public class OfflineMessage {
 	public List<Object> getOfflineMessage() {
 		// to get the list from DB and return
 		// list object would be Message or Image
+//		System.out.println("get!!!!");
 		return null;
 	}
 	

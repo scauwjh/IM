@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import com.java.mina.core.model.User;
 import com.java.mina.core.service.OfflineMessage;
-import com.java.mina.util.Debug;
 import com.java.mina.util.lrucache.LRUCache;
 import com.java.mina.util.lrucache.LRUEntry;
 
@@ -17,7 +16,7 @@ public class GlobalResource {
 	
 	private final static Logger logger = LoggerFactory.getLogger(GlobalResource.class);
 	
-	public static LRUCache<String, List<Object>> messageQueue = new LRUCache<String, List<Object>>(100000) {
+	public static LRUCache<String, List<Object>> messageQueue = new LRUCache<String, List<Object>>(Constant.CACHE_SIZE) {
 		@Override
 		protected boolean ifRemove() {
 			return true; // true to remove the node when get method is called
@@ -26,7 +25,6 @@ public class GlobalResource {
 		@Override
 		protected void remove(LRUEntry<String, List<Object>> node) {
 			logger.info("cache is full, remove and save the oldest message to DB");
-			Debug.println("cache is full...");
 			// cache is full, to save the node to DB
 			new OfflineMessage().saveOfflineMessage(node);
 		}

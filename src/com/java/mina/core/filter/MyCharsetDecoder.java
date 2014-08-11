@@ -63,11 +63,13 @@ public class MyCharsetDecoder extends CumulativeProtocolDecoder {
 							password = getString();
 						} else if (line == 3) {
 							timeStamp = getString();
+							Integer status = in.getInt();
 							User object = new User();
 							object.setHeader(header);
 							object.setUser(user);
 							object.setPassword(password);
 							object.setTimeStamp(timeStamp);
+							object.setStatus(status);
 							out.write(object);
 							break;
 						}
@@ -78,13 +80,18 @@ public class MyCharsetDecoder extends CumulativeProtocolDecoder {
 							receiver = getString();
 						} else if (line == 3) {
 							timeStamp = getString();
+							Integer type = in.getInt();
 							length = in.getInt();
-						} else if (line >= 4 && count >= length) {
-							message = getString();
+							if (length > in.remaining()) {
+								in.reset();
+								return false;
+							}
+							message = in.getString(length, decoder);
 							Message msg = new Message();
 							msg.setHeader(header);
 							msg.setSender(sender);
 							msg.setReceiver(receiver);
+							msg.setType(type);
 							msg.setMessage(message);
 							msg.setTimeStamp(timeStamp);
 							out.write(msg);
@@ -98,9 +105,7 @@ public class MyCharsetDecoder extends CumulativeProtocolDecoder {
 						} else if (line == 3) {
 							timeStamp = getString();
 							length = in.getInt();
-							int remaining = in.remaining();
-							Debug.println("image byte length: " + length + " remaining: " + remaining);
-							if (remaining < length) {
+							if (length > in.remaining()) {
 								in.reset();
 								return false;
 							}
@@ -142,8 +147,10 @@ public class MyCharsetDecoder extends CumulativeProtocolDecoder {
 			return false;
 		}
 		// no exception throw
-		if (in.remaining() > 0)
+		if (in.remaining() > 0) {
+			Debug.println("buffer is remaining");
 			return true;
+		}
 		else return false;
 	}
 

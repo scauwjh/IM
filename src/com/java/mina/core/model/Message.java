@@ -12,6 +12,8 @@ public class Message implements Serializable {
 	
 	private String receiver;
 	
+	private Integer type;
+	
 	private String message;
 	
 	private String timeStamp;
@@ -56,11 +58,13 @@ public class Message implements Serializable {
 	public void setTimeStamp(String timeStamp) {
 		this.timeStamp = timeStamp;
 	}
-	
-	public Integer getSize() {
-		return header.getBytes().length + sender.getBytes().length
-				+ receiver.getBytes().length + message.getBytes().length 
-				+ timeStamp.getBytes().length;
+
+	public Integer getType() {
+		return type;
+	}
+
+	public void setType(Integer type) {
+		this.type = type;
 	}
 
 }

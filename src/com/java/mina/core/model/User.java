@@ -15,6 +15,8 @@ public class User implements Serializable {
 	private String password;
 	
 	private String timeStamp;
+	
+	private Integer status; // 1 for success 0 for failure
 
 	
 	public String getUser() {
@@ -48,11 +50,6 @@ public class User implements Serializable {
 	public void setHeader(String header) {
 		this.header = header;
 	}
-	
-	public Integer getSize() {
-		return header.getBytes().length + user.getBytes().length
-				+ password.getBytes().length + timeStamp.getBytes().length;
-	}
 
 	public String getType() {
 		return type;
@@ -60,5 +57,13 @@ public class User implements Serializable {
 
 	public void setType(String type) {
 		this.type = type;
+	}
+
+	public Integer getStatus() {
+		return status;
+	}
+
+	public void setStatus(Integer status) {
+		this.status = status;
 	}
 }

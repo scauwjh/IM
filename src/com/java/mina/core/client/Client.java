@@ -14,6 +14,7 @@ import com.java.mina.api.API;
 import com.java.mina.api.APIInstance;
 import com.java.mina.constant.Constant;
 import com.java.mina.core.filter.MyCharsetCodecFactory;
+import com.java.mina.core.model.Heartbeat;
 import com.java.mina.core.model.Image;
 import com.java.mina.core.model.Message;
 
@@ -40,6 +41,7 @@ public class Client {
 		connector.setConnectTimeoutMillis(Constant.CONNECT_TIMEOUT); // set connect timeout
 		connector.getFilterChain().addLast("codec", new ProtocolCodecFilter(
 				new MyCharsetCodecFactory(Constant.CHARSET))); // add charset filter
+		connector.getSessionConfig().setUseReadOperation(true); // set use read operation
 		connector.setHandler(new ClientHandler() {
 			@Override
 			public void messageReceived(IoSession session, Object message)
@@ -48,6 +50,7 @@ public class Client {
 				objectReceived(message);
 			}
 		}); // add handler
+		
 		
 		// connect to image port
 		textFuture = connector.connect(new InetSocketAddress(
@@ -69,9 +72,10 @@ public class Client {
 	 * login
 	 * @param user
 	 * @param password
+	 * @return
 	 */
-	public void login(String user, String password) {
-		api.login(textSession, user, password);
+	public Boolean login(String user, String password) {
+		return api.login(textSession, user, password);
 	}
 	
 	/**
@@ -79,9 +83,10 @@ public class Client {
 	 * <p>set image session login status</p>
 	 * @param user
 	 * @param password
+	 * @return
 	 */
-	public void initImageSession(String user, String password) {
-		api.login(imageSession, user, password);
+	public Boolean initImageSession(String user, String password) {
+		return api.login(imageSession, user, password);
 	}
 	
 	/**
@@ -89,17 +94,19 @@ public class Client {
 	 * @param sender
 	 * @param receiver
 	 * @param message
+	 * @return
 	 */
-	public void sendMessage(String sender, String receiver, String message) {
-		api.sendMessage(textSession, sender, receiver, message);
+	public Boolean sendMessage(String sender, String receiver, Integer type, String message) {
+		return api.sendMessage(textSession, sender, receiver, type, message);
 	}
 	
 	/**
 	 * send heartbeat
 	 * @param account
+	 * @return
 	 */
-	public void sendHeartbeat(String account) {
-		api.sendHeartbeat(textSession, account);
+	public Boolean sendHeartbeat(String account) {
+		return api.sendHeartbeat(textSession, account);
 	}
 	
 	/**
@@ -107,9 +114,10 @@ public class Client {
 	 * @param sender
 	 * @param receiver
 	 * @param filePath
+	 * @return
 	 */
-	public void sendImage(String sender, String receiver, String filePath) {
-		api.sendImage(imageSession, sender, receiver, filePath);
+	public boolean sendImage(String sender, String receiver, String filePath) {
+		return api.sendImage(imageSession, sender, receiver, filePath);
 	}
 	
 	/**
@@ -140,6 +148,15 @@ public class Client {
 	}
 	
 	/**
+	 * <p>received a heartbeat</p>
+	 * <p>override this method to write your service</p>
+	 * @param string
+	 */
+	public void heartbeatReceived(Heartbeat heartbeat) {
+		
+	}
+	
+	/**
 	 * message object received
 	 * @param message
 	 * @throws Exception
@@ -151,5 +168,7 @@ public class Client {
 			imageReceived((Image) message);
 		else if (message instanceof String)
 			stringReceived((String) message);
+		else if (message instanceof Heartbeat)
+			heartbeatReceived((Heartbeat) message);
 	}
 }
