@@ -20,11 +20,14 @@ public interface API {
 	/**
 	 * 发送登录信息
 	 * @param session
+	 * @param connector
+	 * @param portType 0 is text, 1 is image
 	 * @param account
 	 * @param password
 	 * @return
 	 */
-	public Boolean login(IoSession session, String account, String password);
+	public Boolean login(IoSession session,int portType,
+			String account, String password);
 	
 	/**
 	 * 发送文字信息

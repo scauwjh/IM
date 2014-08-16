@@ -2,7 +2,6 @@ package com.java.mina.core.server;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 
 import org.apache.mina.core.service.IoHandlerAdapter;
@@ -22,17 +21,10 @@ import com.java.mina.core.service.OfflineMessage;
 import com.java.mina.util.AddressUtil;
 import com.java.mina.util.Debug;
 import com.java.mina.util.StringUtil;
-import com.java.mina.util.lrucache.LRUCache;
 
 public class ServerHandler extends IoHandlerAdapter {
 	
 	protected static final Logger logger = LoggerFactory.getLogger(ServerHandler.class);
-	
-	private static HashMap<String, IoSession> sessionMap = GlobalResource.sessionMap;
-	
-	private static HashMap<String, User> userMap = GlobalResource.userMap;
-	
-	private static LRUCache<String, List<Object>> messageQueue = GlobalResource.messageQueue;
 	
 	/**
 	 * <p>server message service</p>
@@ -57,18 +49,18 @@ public class ServerHandler extends IoHandlerAdapter {
 			}
 			
 			// register the login status
-			userMap.put(account, user);
+			GlobalResource.userMap.put(account, user);
 			session.setAttribute(Constant.ACCOUNT, account);
-			
-			account += AddressUtil.getPort(session);
-			session.setAttribute(Constant.SESSION_ACCOUNT, account);
-			sessionMap.put(account, session);
+			Debug.println("online count: " + GlobalResource.userMap.size());
+			String sessionAccount = account + AddressUtil.getPort(session);
+			session.setAttribute(Constant.SESSION_ACCOUNT, sessionAccount);
+			GlobalResource.sessionMap.put(sessionAccount, session);
 			user.setPassword(randStr);
 			user.setStatus(1);
 			session.write(user);
 			
 			// send offline message, message from cache or DB
-			List<Object> cacheMsg = messageQueue.get(account);
+			List<Object> cacheMsg = GlobalResource.messageQueue.get(account);
 			if (cacheMsg != null) {
 				Debug.println("offline message list size: " + cacheMsg.size());
 				for (int i = 0; i < cacheMsg.size(); i++) {
@@ -98,7 +90,7 @@ public class ServerHandler extends IoHandlerAdapter {
 			// update timeStamp
 			msg.setTimeStamp(new Date().toString());
 			// get the session of receiver
-			IoSession sendSess = sessionMap.get(receiver + Constant.TEXT_PORT);
+			IoSession sendSess = GlobalResource.sessionMap.get(receiver + Constant.TEXT_PORT);
 			Debug.println("sender: " + sender + "\nsession user: " + sessionUser);
 			if (sendSess != null) {
 				sendSess.write(msg);// send message
@@ -107,13 +99,13 @@ public class ServerHandler extends IoHandlerAdapter {
 			else {
 				// not online
 				Debug.println("receiver " + receiver + " not online");
-				List<Object> list = messageQueue.get(receiver + Constant.TEXT_PORT);
+				List<Object> list = GlobalResource.messageQueue.get(receiver);
 				if (list == null) {
 					list = new ArrayList<Object>();
 					Debug.println("list is null");
 				}
 				list.add(msg);
-				messageQueue.put(receiver + Constant.TEXT_PORT, list); // save to messageQueue
+				GlobalResource.messageQueue.put(receiver, list); // save to messageQueue
 			}
 			return;
 		}
@@ -124,7 +116,7 @@ public class ServerHandler extends IoHandlerAdapter {
 			// update timeStamp
 			msg.setTimeStamp(new Date().toString());
 			// get the session of receiver
-			IoSession sendSess = sessionMap.get(receiver + Constant.IMAGE_PORT);
+			IoSession sendSess = GlobalResource.sessionMap.get(receiver + Constant.IMAGE_PORT);
 			Debug.println("sender: " + sender + "\nsession user: " + sessionUser);
 			if (sendSess != null) {
 				sendSess.write(msg);// send message
@@ -133,13 +125,13 @@ public class ServerHandler extends IoHandlerAdapter {
 			else {
 				// not online
 				Debug.println("receiver " + receiver + " not online");
-				List<Object> list = messageQueue.get(receiver + Constant.IMAGE_PORT);
+				List<Object> list = GlobalResource.messageQueue.get(receiver);
 				if (list == null) {
 					list = new ArrayList<Object>();
 					Debug.println("list is null");
 				}
 				list.add(msg);
-				messageQueue.put(receiver + Constant.IMAGE_PORT, list); // save to messageQueue
+				GlobalResource.messageQueue.put(receiver, list); // save to messageQueue
 			}
 			return;
 		}
@@ -181,11 +173,12 @@ public class ServerHandler extends IoHandlerAdapter {
 		String sessionAccount = (String) session.getAttribute(Constant.SESSION_ACCOUNT);
 		String account = (String) session.getAttribute(Constant.ACCOUNT);
 		logger.info("session closed: " + --Server.SESSION_COUNT);
-		sessionMap.remove(sessionAccount);
-		if (!sessionMap.containsKey(account + Constant.TEXT_PORT) &&
-				!sessionMap.containsKey(account + Constant.IMAGE_PORT)) {
+		GlobalResource.sessionMap.remove(sessionAccount);
+		if (account == null) return;
+		if (!GlobalResource.sessionMap.containsKey(account + Constant.TEXT_PORT) &&
+				!GlobalResource.sessionMap.containsKey(account + Constant.IMAGE_PORT)) {
 			logger.info("user " + account + " is logout");
-			userMap.remove(account);
+			GlobalResource.userMap.remove(account);
 		}
 	}
 	

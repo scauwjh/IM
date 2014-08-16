@@ -3,6 +3,8 @@ package com.java.mina.demo;
 import java.io.FileOutputStream;
 import java.util.Scanner;
 
+import com.java.mina.api.API;
+import com.java.mina.api.APIInstance;
 import com.java.mina.core.client.Client;
 import com.java.mina.core.model.Heartbeat;
 import com.java.mina.core.model.Image;
@@ -78,13 +80,28 @@ public class ClientDemo extends Client {
 			if (message.equals("image")) {
 				String path = "C:\\Users\\asus\\Desktop\\tmp\\123.png";
 				// use multiple thread to finish the service
-				client.initImageSession(sender, password);
+				if (!client.initImageSession(sender, password)) {
+					continue;
+				}
 				client.sendImage(sender, receiver, path);
 				continue;
 			}
 			if (message.equals("beat")) {
 				// send heartbeat
 				client.sendHeartbeat(sender);
+				continue;
+			}
+			if (message.equals("check")) {
+				API api = new APIInstance();
+				if (api.ifOnline(receiver))
+					System.out.println(receiver + " is online");
+				else
+					System.out.println(receiver + " is not online");
+				continue;
+			}
+			if (message.equals("how")) {
+				API api = new APIInstance();
+				System.out.println("online count: " + api.onlineCount());
 				continue;
 			}
 			client.sendMessage(sender, receiver, 1, message);

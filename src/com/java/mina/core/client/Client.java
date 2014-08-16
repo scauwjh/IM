@@ -22,15 +22,15 @@ public class Client {
 	
 	public static final Logger logger = LoggerFactory.getLogger(Client.class);
 	
-	protected SocketConnector connector;
+	public static SocketConnector connector;
+	
+	public static IoSession textSession;
+	
+	public static IoSession imageSession;
 	
 	protected ConnectFuture textFuture;
 	
 	protected ConnectFuture imageFuture;
-	
-	protected IoSession textSession;
-	
-	protected IoSession imageSession;
 	
 	protected  API api;
 	
@@ -75,7 +75,7 @@ public class Client {
 	 * @return
 	 */
 	public Boolean login(String user, String password) {
-		return api.login(textSession, user, password);
+		return api.login(textSession, 0, user, password);
 	}
 	
 	/**
@@ -86,7 +86,7 @@ public class Client {
 	 * @return
 	 */
 	public Boolean initImageSession(String user, String password) {
-		return api.login(imageSession, user, password);
+		return api.login(imageSession, 1, user, password);
 	}
 	
 	/**

@@ -2,13 +2,16 @@ package com.java.mina.api;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.net.InetSocketAddress;
 import java.util.Date;
 
+import org.apache.mina.core.future.ConnectFuture;
 import org.apache.mina.core.future.ReadFuture;
 import org.apache.mina.core.session.IoSession;
 
 import com.java.mina.constant.Constant;
 import com.java.mina.constant.GlobalResource;
+import com.java.mina.core.client.Client;
 import com.java.mina.core.model.Heartbeat;
 import com.java.mina.core.model.Image;
 import com.java.mina.core.model.Message;
@@ -38,11 +41,32 @@ public class APIInstance implements API {
 	/**
 	 * 发送登录信息
 	 * @param session
+	 * @param connector
+	 * @param portType 0 is text, 1 is image
 	 * @param account
 	 * @param password
 	 * @return
 	 */
-	public Boolean login(IoSession session, String account, String password) {
+	public Boolean login(IoSession session, int portType, String account, String password) {
+		if (session.isClosing()) {
+			Debug.println("connect again!!");
+			ConnectFuture conn = null; 
+			if (portType == 0) {
+				conn = Client.connector.connect(new InetSocketAddress(
+						Constant.REMOTE_ADDRESS, Constant.TEXT_PORT));
+				conn.awaitUninterruptibly();
+				Client.textSession = conn.getSession();
+				session = Client.textSession;
+			}
+			if (portType == 1) {
+				conn = Client.connector.connect(new InetSocketAddress(
+						Constant.REMOTE_ADDRESS, Constant.IMAGE_PORT));
+				conn.awaitUninterruptibly();
+				Debug.println("connect to image port again!!");
+				Client.imageSession = conn.getSession();
+				session = Client.imageSession;
+			}
+		}
 		User user = new User();
 		user.setHeader(Constant.LOGIN);
 		user.setUser(account);
@@ -54,8 +78,10 @@ public class APIInstance implements API {
 		if (read.awaitUninterruptibly(Constant.LOGIN_OVEROUT)) {
 			User retMsg = (User) read.getMessage();
 			if (retMsg.getStatus().equals(1)) {
+				Debug.println("login succeed!");
 				return true;
 			} else {
+				Debug.println("login failed!");
 				return false;
 			}
 		} else {
@@ -108,6 +134,9 @@ public class APIInstance implements API {
 	 */
 	public Boolean sendImage(IoSession session, String sender, 
 			String receiver, String filePath) {
+		if (session.isClosing()) {
+			Debug.println("send image is close!!!");
+		}
 		Image img = new Image();
 		img.setHeader(Constant.IMAGE);
 		img.setSender(sender);
