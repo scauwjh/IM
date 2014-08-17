@@ -77,7 +77,8 @@ public class ServerHandler extends IoHandlerAdapter {
 		}
 		// check login status
 		String sessionUser = (String) session.getAttribute(Constant.SESSION_ACCOUNT);
-		if (sessionUser == null) {
+		String account = (String) session.getAttribute(Constant.ACCOUNT);
+		if (!GlobalResource.userMap.containsKey(account)) {
 			logger.warn("no login status in this session: " + session.getRemoteAddress());
 			session.write(StringUtil.returnMessage(-1, "no login status"));
 			closeSession(session);
@@ -174,6 +175,8 @@ public class ServerHandler extends IoHandlerAdapter {
 		String account = (String) session.getAttribute(Constant.ACCOUNT);
 		logger.info("session closed: " + --Server.SESSION_COUNT);
 		GlobalResource.sessionMap.remove(sessionAccount);
+		session.removeAttribute(Constant.SESSION_ACCOUNT);
+		session.removeAttribute(Constant.ACCOUNT);
 		if (account == null) return;
 		if (!GlobalResource.sessionMap.containsKey(account + Constant.TEXT_PORT) &&
 				!GlobalResource.sessionMap.containsKey(account + Constant.IMAGE_PORT)) {

@@ -11,7 +11,11 @@ public class Constant {
 	/**
 	 * login overtime: 10s
 	 */
-	public static final Long LOGIN_OVEROUT = 10000L;
+	public static final Long LOGIN_OVERTIME = 10000L;
+	/**
+	 * heart beat overtime: 3s
+	 */
+	public static final Long HEARTBEAT_OVERTIME = 3000L;
 	
 	public static final String ACCOUNT = "account";
 	

@@ -7,6 +7,7 @@ import java.util.Date;
 
 import org.apache.mina.core.future.ConnectFuture;
 import org.apache.mina.core.future.ReadFuture;
+import org.apache.mina.core.future.WriteFuture;
 import org.apache.mina.core.session.IoSession;
 
 import com.java.mina.constant.Constant;
@@ -40,46 +41,42 @@ public class APIInstance implements API {
 	
 	/**
 	 * 发送登录信息
-	 * @param session
-	 * @param connector
-	 * @param portType 0 is text, 1 is image
 	 * @param account
 	 * @param password
 	 * @return
 	 */
-	public Boolean login(IoSession session, int portType, String account, String password) {
-		if (session.isClosing()) {
-			Debug.println("connect again!!");
-			ConnectFuture conn = null; 
-			if (portType == 0) {
-				conn = Client.connector.connect(new InetSocketAddress(
-						Constant.REMOTE_ADDRESS, Constant.TEXT_PORT));
-				conn.awaitUninterruptibly();
-				Client.textSession = conn.getSession();
-				session = Client.textSession;
-			}
-			if (portType == 1) {
-				conn = Client.connector.connect(new InetSocketAddress(
-						Constant.REMOTE_ADDRESS, Constant.IMAGE_PORT));
-				conn.awaitUninterruptibly();
-				Debug.println("connect to image port again!!");
-				Client.imageSession = conn.getSession();
-				session = Client.imageSession;
-			}
+	public Boolean login(String account, String password) {
+		Debug.println("------login begin------");
+		ConnectFuture conn = null;
+		ReadFuture read = null;
+		if (Client.textSession.isClosing()) {
+			Debug.println("connect text port again!!");
+			conn = Client.connector.connect(new InetSocketAddress(
+					Constant.REMOTE_ADDRESS, Constant.TEXT_PORT));
+			conn.awaitUninterruptibly();
+			Client.textSession = conn.getSession();
 		}
+		if (Client.imageSession.isClosing()) {
+			Debug.println("connect image port again!!");
+			conn = Client.connector.connect(new InetSocketAddress(
+					Constant.REMOTE_ADDRESS, Constant.IMAGE_PORT));
+			conn.awaitUninterruptibly();
+			Client.imageSession = conn.getSession();
+		}
+		// send login packet
+		// text
 		User user = new User();
 		user.setHeader(Constant.LOGIN);
 		user.setUser(account);
 		user.setPassword(password);
 		user.setTimeStamp(new Date().toString());
 		user.setStatus(0);
-		session.write(user).awaitUninterruptibly();
-		ReadFuture read = session.read();
-		if (read.awaitUninterruptibly(Constant.LOGIN_OVEROUT)) {
+		Client.textSession.write(user).awaitUninterruptibly();
+		read = Client.textSession.read();
+		if (read.awaitUninterruptibly(Constant.LOGIN_OVERTIME)) {
 			User retMsg = (User) read.getMessage();
 			if (retMsg.getStatus().equals(1)) {
-				Debug.println("login succeed!");
-				return true;
+				Debug.println("text session login succeed!");
 			} else {
 				Debug.println("login failed!");
 				return false;
@@ -88,6 +85,25 @@ public class APIInstance implements API {
 			Debug.println("Failed to connect");
 			return false;
 		}
+		// image
+		Client.imageSession.write(user).awaitUninterruptibly();
+		read = Client.imageSession.read();
+		if (read.awaitUninterruptibly(Constant.LOGIN_OVERTIME)) {
+			User retMsg = (User) read.getMessage();
+			if (retMsg.getStatus().equals(1)) {
+				Debug.println("image session login succeed!");
+			} else {
+				Debug.println("login failed!");
+				return false;
+			}
+		} else {
+			Debug.println("Failed to connect");
+			return false;
+		}
+		// end return
+		Debug.println("------login end------");
+		return true;
+		
 	}
 	
 	/**
@@ -107,21 +123,43 @@ public class APIInstance implements API {
 		msg.setMessage(message);
 		msg.setType(type);
 		msg.setTimeStamp(new Date().toString());
-		return session.write(msg).isWritten();
+		WriteFuture write = session.write(msg).awaitUninterruptibly();
+		return write.isWritten();
 	}
 	
 	/**
 	 * 发送心跳包
-	 * @param session
 	 * @param account
 	 * @return
 	 */
-	public Boolean sendHeartbeat(IoSession session, String account) {
+	public Boolean sendHeartbeat(String account) {
 		Heartbeat hb = new Heartbeat();
 		hb.setAccount(account);
 		hb.setHeader(Constant.HEARTBEAT);
 		hb.setTimeStamp(new Date().toString());
-		return session.write(hb).isWritten();
+		Client.imageSession.write(hb).awaitUninterruptibly();
+		ReadFuture read = Client.imageSession.read();
+		if (read.awaitUninterruptibly(Constant.HEARTBEAT_OVERTIME)) {
+			Heartbeat retMsg = (Heartbeat) read.getMessage();
+			if (retMsg.getAccount().equals(account)) {
+				Debug.println("image heartbeat received is correct!");
+			} else {
+				Debug.println("image heartbeat received is not correct!");
+				return false;
+			}
+		}
+		Client.textSession.write(hb).awaitUninterruptibly();
+		read = Client.textSession.read();
+		if (read.awaitUninterruptibly(Constant.HEARTBEAT_OVERTIME)) {
+			Heartbeat retMsg = (Heartbeat) read.getMessage();
+			if (retMsg.getAccount().equals(account)) {
+				Debug.println("text heartbeat received is correct!");
+			} else {
+				Debug.println("text heartbeat received is not correct!");
+				return false;
+			}
+		}
+		return true;
 	}
 	
 	/**
@@ -129,11 +167,12 @@ public class APIInstance implements API {
 	 * @param session
 	 * @param sender
 	 * @param receiver
+	 * @param extra
 	 * @param filePath
 	 * @return
 	 */
 	public Boolean sendImage(IoSession session, String sender, 
-			String receiver, String filePath) {
+			String receiver, String extra, String filePath) {
 		if (session.isClosing()) {
 			Debug.println("send image is close!!!");
 		}
@@ -141,12 +180,13 @@ public class APIInstance implements API {
 		img.setHeader(Constant.IMAGE);
 		img.setSender(sender);
 		img.setReceiver(receiver);
+		img.setExtra(extra);
 		img.setTimeStamp(new Date().toString());
 		try {
 			InputStream in = new FileInputStream(filePath);
 			byte[] dst = ImageUtil.imageCompress(in, 0.9, 1.0);
 			img.setImage(dst);
-			return session.write(img).isWritten();
+			return session.write(img).awaitUninterruptibly().isWritten();
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;

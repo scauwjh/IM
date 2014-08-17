@@ -6,7 +6,6 @@ import java.util.Scanner;
 import com.java.mina.api.API;
 import com.java.mina.api.APIInstance;
 import com.java.mina.core.client.Client;
-import com.java.mina.core.model.Heartbeat;
 import com.java.mina.core.model.Image;
 import com.java.mina.core.model.Message;
 import com.java.mina.util.StringUtil;
@@ -32,6 +31,7 @@ public class ClientDemo extends Client {
 	public void imageReceived(Image message) {
 		Image msg = (Image) message;
 		System.out.println("image received form: " + msg.getSender());
+		System.out.println("extra: " + msg.getExtra());
 		System.out.println("timeStamp: " + msg.getTimeStamp());
 		String file = "C:\\Users\\asus\\Desktop\\rec" + StringUtil.randString(5)  + ".jpg";
 		try {
@@ -49,15 +49,6 @@ public class ClientDemo extends Client {
 	@Override
 	public void stringReceived(String message) {
 		System.out.println("received retMsg from server: " + message);
-	}
-	
-	/**
-	 * 重写heartbeat接收的方法
-	 */
-	@Override
-	public void heartbeatReceived(Heartbeat message) {
-		System.out.println("received heartbeat from server and timestamp: " + message.getTimeStamp());
-		System.out.println("heartbeat for account: " + message.getAccount());
 	}
 	
 	
@@ -80,15 +71,14 @@ public class ClientDemo extends Client {
 			if (message.equals("image")) {
 				String path = "C:\\Users\\asus\\Desktop\\tmp\\123.png";
 				// use multiple thread to finish the service
-				if (!client.initImageSession(sender, password)) {
-					continue;
-				}
-				client.sendImage(sender, receiver, path);
+				client.sendImage(sender, receiver, "extra", path);
 				continue;
 			}
 			if (message.equals("beat")) {
 				// send heartbeat
-				client.sendHeartbeat(sender);
+				if (client.sendHeartbeat(sender))
+					System.out.println("beat succeed!");
+				else System.out.println("beat failed!");
 				continue;
 			}
 			if (message.equals("check")) {

@@ -14,7 +14,6 @@ import com.java.mina.api.API;
 import com.java.mina.api.APIInstance;
 import com.java.mina.constant.Constant;
 import com.java.mina.core.filter.MyCharsetCodecFactory;
-import com.java.mina.core.model.Heartbeat;
 import com.java.mina.core.model.Image;
 import com.java.mina.core.model.Message;
 
@@ -75,18 +74,7 @@ public class Client {
 	 * @return
 	 */
 	public Boolean login(String user, String password) {
-		return api.login(textSession, 0, user, password);
-	}
-	
-	/**
-	 * <p>init image session</p>
-	 * <p>set image session login status</p>
-	 * @param user
-	 * @param password
-	 * @return
-	 */
-	public Boolean initImageSession(String user, String password) {
-		return api.login(imageSession, 1, user, password);
+		return api.login(user, password);
 	}
 	
 	/**
@@ -106,18 +94,19 @@ public class Client {
 	 * @return
 	 */
 	public Boolean sendHeartbeat(String account) {
-		return api.sendHeartbeat(textSession, account);
+		return api.sendHeartbeat(account);
 	}
 	
 	/**
 	 * send image
 	 * @param sender
 	 * @param receiver
+	 * @param extra
 	 * @param filePath
 	 * @return
 	 */
-	public boolean sendImage(String sender, String receiver, String filePath) {
-		return api.sendImage(imageSession, sender, receiver, filePath);
+	public boolean sendImage(String sender, String receiver, String extra, String filePath) {
+		return api.sendImage(imageSession, sender, receiver, extra, filePath);
 	}
 	
 	/**
@@ -148,15 +137,6 @@ public class Client {
 	}
 	
 	/**
-	 * <p>received a heartbeat</p>
-	 * <p>override this method to write your service</p>
-	 * @param string
-	 */
-	public void heartbeatReceived(Heartbeat heartbeat) {
-		
-	}
-	
-	/**
 	 * message object received
 	 * @param message
 	 * @throws Exception
@@ -168,7 +148,5 @@ public class Client {
 			imageReceived((Image) message);
 		else if (message instanceof String)
 			stringReceived((String) message);
-		else if (message instanceof Heartbeat)
-			heartbeatReceived((Heartbeat) message);
 	}
 }

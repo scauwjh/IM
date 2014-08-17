@@ -19,15 +19,11 @@ public interface API {
 	
 	/**
 	 * 发送登录信息
-	 * @param session
-	 * @param connector
-	 * @param portType 0 is text, 1 is image
 	 * @param account
 	 * @param password
 	 * @return
 	 */
-	public Boolean login(IoSession session,int portType,
-			String account, String password);
+	public Boolean login(String account, String password);
 	
 	/**
 	 * 发送文字信息
@@ -43,21 +39,21 @@ public interface API {
 	
 	/**
 	 * 发送心跳包
-	 * @param session
 	 * @param account
 	 * @return
 	 */
-	public Boolean sendHeartbeat(IoSession session, String account);
+	public Boolean sendHeartbeat(String account);
 	
 	/**
 	 * 发送图片
 	 * @param session
 	 * @param sender
 	 * @param receiver
+	 * @param extra
 	 * @param filePath
 	 * @return
 	 */
 	public Boolean sendImage(IoSession session, String sender, 
-			String receiver, String filePath);
+			String receiver, String extra, String filePath);
 	
 }

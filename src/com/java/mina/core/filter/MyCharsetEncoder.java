@@ -51,6 +51,7 @@ public class MyCharsetEncoder extends ProtocolEncoderAdapter {
 			buffer.putString(image.getHeader() + "\n", encoder);
 			buffer.putString(image.getSender() + "\n", encoder);
 			buffer.putString(image.getReceiver() + "\n", encoder);
+			buffer.putString(image.getExtra() + "\n", encoder);
 			buffer.putString(image.getTimeStamp() + "\n", encoder);
 			buffer.putInt(image.getImage().length);
 			buffer.put(image.getImage(), 0, image.getImage().length);

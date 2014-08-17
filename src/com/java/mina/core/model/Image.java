@@ -12,6 +12,8 @@ public class Image implements Serializable {
 	
 	private String receiver;
 	
+	private String extra;
+	
 	private byte[] image;
 	
 	private String timeStamp;
@@ -55,6 +57,14 @@ public class Image implements Serializable {
 
 	public void setReceiver(String receiver) {
 		this.receiver = receiver;
+	}
+
+	public String getExtra() {
+		return extra;
+	}
+
+	public void setExtra(String extra) {
+		this.extra = extra;
 	}
 	
 }

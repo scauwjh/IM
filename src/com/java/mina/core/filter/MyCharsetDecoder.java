@@ -45,7 +45,7 @@ public class MyCharsetDecoder extends CumulativeProtocolDecoder {
 		count = 0;
 		in.mark();
 		String header = null, user = null, password = null, sender = null,
-				receiver = null, message = null, timeStamp = null;
+				receiver = null, message = null, timeStamp = null, extra = null;
 		int length = 0;
 		try {
 			while (in.hasRemaining()) {
@@ -103,6 +103,8 @@ public class MyCharsetDecoder extends CumulativeProtocolDecoder {
 						} else if (line == 2) {
 							receiver = getString();
 						} else if (line == 3) {
+							extra = getString();
+						} else if (line == 4) {
 							timeStamp = getString();
 							length = in.getInt();
 							if (length > in.remaining()) {
@@ -115,6 +117,7 @@ public class MyCharsetDecoder extends CumulativeProtocolDecoder {
 							img.setHeader(header);
 							img.setSender(sender);
 							img.setReceiver(receiver);
+							img.setExtra(extra);
 							img.setImage(dst);
 							img.setTimeStamp(timeStamp);
 							out.write(img);
