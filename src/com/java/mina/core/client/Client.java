@@ -27,9 +27,13 @@ public class Client {
 	
 	public static IoSession imageSession;
 	
+	public static IoSession heartbeatSession;
+	
 	protected ConnectFuture textFuture;
 	
 	protected ConnectFuture imageFuture;
+	
+	protected ConnectFuture heartbeatFuture;
 	
 	protected  API api;
 	
@@ -62,6 +66,12 @@ public class Client {
 				Constant.REMOTE_ADDRESS, Constant.IMAGE_PORT));
 		imageFuture.awaitUninterruptibly();
 		imageSession = imageFuture.getSession();
+		
+		// connect to heartbeat port
+		heartbeatFuture = connector.connect(new InetSocketAddress(
+				Constant.REMOTE_ADDRESS, Constant.HEARTBEAT_PORT));
+		heartbeatFuture.awaitUninterruptibly();
+		heartbeatSession = heartbeatFuture.getSession();
 		
 		// im api init
 		api = new APIInstance();

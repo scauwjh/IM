@@ -7,15 +7,15 @@ public class Constant {
 	/**
 	 * session overtime： 5min
 	 */
-	public static final Integer SESSION_OVERTIME = 300000;
+	public static final Long SESSION_OVERTIME = 30000L;//300000L;
 	/**
 	 * login overtime: 10s
 	 */
 	public static final Long LOGIN_OVERTIME = 10000L;
 	/**
-	 * heart beat overtime: 3s
+	 * heart beat overtime: 5s
 	 */
-	public static final Long HEARTBEAT_OVERTIME = 3000L;
+	public static final Long HEARTBEAT_OVERTIME = 10000L;
 	
 	public static final String ACCOUNT = "account";
 	
@@ -33,15 +33,19 @@ public class Constant {
 	
 	public static final String STRING = "string";
 	
-	public final static String REMOTE_ADDRESS = "127.0.0.1";
+	public final static String REMOTE_ADDRESS = "124.173.68.84";//"127.0.0.1";//
 	
 	public static final Integer TEXT_PORT = 9999;
 	
 	public static final Integer IMAGE_PORT = 8888;
+	
+	public static final Integer HEARTBEAT_PORT = 7777;
 	
 	public final static String CHARSET = "UTF-8";
 	
 	public final static Long CONNECT_TIMEOUT = 3000L;
 	
 	public final static Integer CACHE_SIZE = 100000;
+	
+	public final static Integer SERVER_BUFFER_SIZE = 4096;
 }

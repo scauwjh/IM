@@ -161,5 +161,6 @@ public class LRUCache<K, V> {
 			value = in.next();
 			cache.put(key, value);
 		}
+		in.close();
 	}
 }

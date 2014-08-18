@@ -35,12 +35,40 @@ public class ServerHandler extends IoHandlerAdapter {
 	public void messageReceived(IoSession session, Object message) 
 			throws Exception {
 		session.setAttribute(Constant.HEARTBEAT, System.currentTimeMillis());
+		String randStr = StringUtil.randString(32);
+		// if heartbeat
+		if (message instanceof Heartbeat) {
+			Boolean flag = true;
+			Debug.println("heartbeat is received");
+			Heartbeat hb = (Heartbeat) message;
+			String acc = hb.getAccount();
+			IoSession sess = GlobalResource.sessionMap.get(acc + Constant.TEXT_PORT);
+			if (sess == null) {
+				logger.warn("text port session is null for heartbeat");
+				flag = false;
+				return;
+			}
+			sess.setAttribute(Constant.HEARTBEAT, System.currentTimeMillis());
+			sess = GlobalResource.sessionMap.get(acc + Constant.IMAGE_PORT);
+			if (sess == null) {
+				logger.warn("text port session is null for heartbeat");
+				flag = false;
+				return;
+			}
+			sess.setAttribute(Constant.HEARTBEAT, System.currentTimeMillis());
+			if (flag)
+				Debug.println(acc + " is beat success!");
+			else
+				hb.setAccount(randStr);
+			hb.setTimeStamp(new Date().toString());
+			session.write(hb);
+			return;
+		}
 		if (message instanceof User) {
 			User user = (User) message;
 			String account = user.getUser();
 			String password = user.getPassword();
 			Login login = new Login();
-			String randStr = StringUtil.randString(32);
 			if (!login.login(account, password)) {
 				user.setPassword(randStr);
 				user.setStatus(0);
@@ -136,13 +164,6 @@ public class ServerHandler extends IoHandlerAdapter {
 			}
 			return;
 		}
-		if (message instanceof Heartbeat) {
-			Debug.println("heartbeat is received");
-			Heartbeat hb = (Heartbeat) message;
-			hb.setTimeStamp(new Date().toString());
-			session.write(hb);
-			return;
-		}
 		if (message == null) {
 			logger.warn("invalid request from: " + session.getRemoteAddress());
 			session.write(StringUtil.returnMessage(-1, "invalid request"));
@@ -154,10 +175,13 @@ public class ServerHandler extends IoHandlerAdapter {
 	public void sessionIdle(IoSession session, IdleStatus status) 
 			throws Exception {
 		Long heartbeat = (Long) session.getAttribute(Constant.HEARTBEAT);
-		if (heartbeat != null && System.currentTimeMillis() 
-				- heartbeat > Constant.SESSION_OVERTIME) {
+		Long systemTime = System.currentTimeMillis();
+		if (heartbeat != null && (systemTime - heartbeat)
+				> Constant.SESSION_OVERTIME) {
 			closeSession(session);
 			logger.info("session from " + session.getRemoteAddress() + " is overtime");
+			Debug.println("beat time: " + heartbeat);
+			Debug.println("system time: " + systemTime);
 		}
 	}
 	

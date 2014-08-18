@@ -6,12 +6,12 @@ public class Debug {
 	
 	public static void println(Object value) {
 		if (IS_DEBUG)
-			System.out.println(value);
+			System.out.println("----------" + value + "----------");
 	}
 	
 	public static void print(Object value) {
 		if (IS_DEBUG)
-			System.out.print(value);
+			System.out.print("----------" + value);
 	}
 	
 	public static void printStackTrace(Object e) {

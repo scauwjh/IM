@@ -9,6 +9,8 @@ import org.apache.mina.core.future.ConnectFuture;
 import org.apache.mina.core.future.ReadFuture;
 import org.apache.mina.core.future.WriteFuture;
 import org.apache.mina.core.session.IoSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.java.mina.constant.Constant;
 import com.java.mina.constant.GlobalResource;
@@ -21,6 +23,9 @@ import com.java.mina.util.Debug;
 import com.java.mina.util.ImageUtil;
 
 public class APIInstance implements API {
+	
+	public final static Logger logger = LoggerFactory.getLogger(APIInstance.class);
+	
 	
 	/**
 	 * 服务器总在线人数
@@ -71,7 +76,9 @@ public class APIInstance implements API {
 		user.setPassword(password);
 		user.setTimeStamp(new Date().toString());
 		user.setStatus(0);
-		Client.textSession.write(user).awaitUninterruptibly();
+		WriteFuture write = Client.textSession.write(user).awaitUninterruptibly();
+		if (!write.isWritten())
+			return false;
 		read = Client.textSession.read();
 		if (read.awaitUninterruptibly(Constant.LOGIN_OVERTIME)) {
 			User retMsg = (User) read.getMessage();
@@ -86,7 +93,9 @@ public class APIInstance implements API {
 			return false;
 		}
 		// image
-		Client.imageSession.write(user).awaitUninterruptibly();
+		write = Client.imageSession.write(user).awaitUninterruptibly();
+		if (!write.isWritten())
+			return false;
 		read = Client.imageSession.read();
 		if (read.awaitUninterruptibly(Constant.LOGIN_OVERTIME)) {
 			User retMsg = (User) read.getMessage();
@@ -137,25 +146,16 @@ public class APIInstance implements API {
 		hb.setAccount(account);
 		hb.setHeader(Constant.HEARTBEAT);
 		hb.setTimeStamp(new Date().toString());
-		Client.imageSession.write(hb).awaitUninterruptibly();
-		ReadFuture read = Client.imageSession.read();
+		WriteFuture write = Client.heartbeatSession.write(hb).awaitUninterruptibly();
+		if (!write.isWritten())
+			return false;
+		ReadFuture read = Client.heartbeatSession.read();
 		if (read.awaitUninterruptibly(Constant.HEARTBEAT_OVERTIME)) {
 			Heartbeat retMsg = (Heartbeat) read.getMessage();
 			if (retMsg.getAccount().equals(account)) {
-				Debug.println("image heartbeat received is correct!");
+				Debug.println("heartbeat received is correct!");
 			} else {
-				Debug.println("image heartbeat received is not correct!");
-				return false;
-			}
-		}
-		Client.textSession.write(hb).awaitUninterruptibly();
-		read = Client.textSession.read();
-		if (read.awaitUninterruptibly(Constant.HEARTBEAT_OVERTIME)) {
-			Heartbeat retMsg = (Heartbeat) read.getMessage();
-			if (retMsg.getAccount().equals(account)) {
-				Debug.println("text heartbeat received is correct!");
-			} else {
-				Debug.println("text heartbeat received is not correct!");
+				Debug.println("heartbeat received is not correct!");
 				return false;
 			}
 		}
