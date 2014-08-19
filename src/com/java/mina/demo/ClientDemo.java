@@ -2,6 +2,8 @@ package com.java.mina.demo;
 
 import java.io.FileOutputStream;
 import java.util.Scanner;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import com.java.mina.api.API;
 import com.java.mina.api.APIInstance;
@@ -11,6 +13,10 @@ import com.java.mina.core.model.Message;
 import com.java.mina.util.StringUtil;
 
 public class ClientDemo extends Client {
+	
+	public static Integer count = 0;
+	
+	public static Integer errCount = 0;
 	
 	/**
 	 * 重写文字消息接收的方法
@@ -53,32 +59,53 @@ public class ClientDemo extends Client {
 	
 	
 	public static void main(String[] args) {
-		ClientDemo client = new ClientDemo();
+		final ClientDemo client = new ClientDemo();
 		Scanner in = new Scanner(System.in);
 		System.out.println("enter a name for user: ");
-		String sender = in.next();
-		String password = "123456";
+		final String sender = in.next();
+		final String password = "123456";
 		// login
-		client.login(sender, password);
+		if (!client.login(sender, password)) {
+			System.out.println("login failed!");
+			in.close();
+			return;
+		}
+		
+		TimerTask task = new TimerTask() {  
+	        public void run() {
+	        	if (count == 0 && client.sendHeartbeat(sender))
+					System.out.println("beat succeed!");
+				else {
+					errCount ++;
+					System.out.println("beat failed!");
+					if (count++ > 4) {
+						if (client.login(sender, password)) {
+							System.out.println("login succeed!");
+							count = 0;
+						} else {
+							System.out.println("login failed!");
+						}
+					}
+				}
+	        }     
+	    };
+		Timer timer = new Timer(true);
+		timer.schedule(task, 2000, 5000);
 		
 		// send message service
 		while(true) {
 			System.out.println("enter name message or exit: ");
 			String receiver = in.next();
-			if (receiver.equals("exit"))
+			if (receiver.equals("exit")) {
+				timer.cancel();
+				System.out.println("!!!!!!!!!!!!error count: " + errCount);
 				break;
+			}
 			String message = in.next();
 			if (message.equals("image")) {
 				String path = "C:\\Users\\asus\\Desktop\\tmp\\123.png";
 				// use multiple thread to finish the service
 				client.sendImage(sender, receiver, "extra", path);
-				continue;
-			}
-			if (message.equals("beat")) {
-				// send heartbeat
-				if (client.sendHeartbeat(sender))
-					System.out.println("beat succeed!");
-				else System.out.println("beat failed!");
 				continue;
 			}
 			if (message.equals("check")) {

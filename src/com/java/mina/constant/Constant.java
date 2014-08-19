@@ -13,9 +13,17 @@ public class Constant {
 	 */
 	public static final Long LOGIN_OVERTIME = 10000L;
 	/**
-	 * heart beat overtime: 5s
+	 * heart beat overtime: 10s
 	 */
 	public static final Long HEARTBEAT_OVERTIME = 10000L;
+	/**
+	 * send message overtime: 10s
+	 */
+	public static final Long MESSAGE_OVERTIME = 10000L;
+	/**
+	 * send image overtime: 30s
+	 */
+	public static final Long IMAGE_OVERTIME = 30000L;
 	
 	public static final String ACCOUNT = "account";
 	
@@ -33,7 +41,7 @@ public class Constant {
 	
 	public static final String STRING = "string";
 	
-	public final static String REMOTE_ADDRESS = "124.173.68.84";//"127.0.0.1";//
+	public final static String REMOTE_ADDRESS = "114.215.176.122";//"127.0.0.1";//"124.173.68.84";//
 	
 	public static final Integer TEXT_PORT = 9999;
 	
