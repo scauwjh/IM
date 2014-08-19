@@ -1,6 +1,7 @@
 package com.java.mina.core.client;
 
 import java.net.InetSocketAddress;
+import java.util.Map;
 
 import org.apache.mina.core.future.ConnectFuture;
 import org.apache.mina.core.session.IoSession;
@@ -16,6 +17,8 @@ import com.java.mina.constant.Constant;
 import com.java.mina.core.filter.MyCharsetCodecFactory;
 import com.java.mina.core.model.Image;
 import com.java.mina.core.model.Message;
+import com.java.mina.util.Debug;
+import com.java.mina.util.PropertiesUtil;
 
 public class Client {
 	
@@ -39,9 +42,11 @@ public class Client {
 	
 	
 	public Client() { 
+		// load configure
+		loadProperties();
 		// init connector
 		connector = new NioSocketConnector();
-		connector.setConnectTimeoutMillis(Constant.CONNECT_TIMEOUT); // set connect timeout
+		connector.setConnectTimeoutMillis(Constant.CONNECT_OVERTIME); // set connect timeout
 		connector.getFilterChain().addLast("codec", new ProtocolCodecFilter(
 				new MyCharsetCodecFactory(Constant.CHARSET))); // add charset filter
 		connector.getSessionConfig().setUseReadOperation(true); // set use read operation
@@ -57,24 +62,44 @@ public class Client {
 		
 		// connect to image port
 		textFuture = connector.connect(new InetSocketAddress(
-				Constant.REMOTE_ADDRESS, Constant.TEXT_PORT));
+				Constant.SERVER_HOST, Constant.TEXT_PORT));
 		textFuture.awaitUninterruptibly();
 		textSession = textFuture.getSession();
 		
 		// connect to image port
 		imageFuture = connector.connect(new InetSocketAddress(
-				Constant.REMOTE_ADDRESS, Constant.IMAGE_PORT));
+				Constant.SERVER_HOST, Constant.IMAGE_PORT));
 		imageFuture.awaitUninterruptibly();
 		imageSession = imageFuture.getSession();
 		
 		// connect to heartbeat port
 		heartbeatFuture = connector.connect(new InetSocketAddress(
-				Constant.REMOTE_ADDRESS, Constant.HEARTBEAT_PORT));
+				Constant.SERVER_HOST, Constant.HEARTBEAT_PORT));
 		heartbeatFuture.awaitUninterruptibly();
 		heartbeatSession = heartbeatFuture.getSession();
 		
+		Debug.println("connect to remote host: " + Constant.SERVER_HOST);
+		Debug.println("text port: " + Constant.TEXT_PORT);
+		Debug.println("image port: " + Constant.IMAGE_PORT);
+		Debug.println("heartbeat port: " + Constant.HEARTBEAT_PORT);
+		
 		// im api init
 		api = new APIInstance();
+	}
+	
+	/**
+	 * 获取配置
+	 */
+	private void loadProperties() {
+		String path = this.getClass().getResource("/").getPath() 
+				+ "/configure.properties";
+		Map<String, String> map = PropertiesUtil.getProperties(path);
+		Constant.SERVER_HOST = map.get("serverHost");
+		Constant.TEXT_PORT = Integer.valueOf(map.get("textPort"));
+		Constant.IMAGE_PORT = Integer.valueOf(map.get("imagePort"));
+		Constant.HEARTBEAT_PORT = Integer.valueOf(map.get("heartbeatPort"));
+		Constant.SERVER_BUFFER_SIZE = Integer.valueOf(map.get("bufferSize"));
+		Constant.SERVER_CACHE_SIZE = Integer.valueOf(map.get("cacheSize"));
 	}
 	
 	/**

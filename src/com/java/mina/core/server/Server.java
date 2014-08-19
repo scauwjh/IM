@@ -2,6 +2,7 @@ package com.java.mina.core.server;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.Map;
 import java.util.concurrent.Executors;
 
 import org.apache.mina.core.service.IoAcceptor;
@@ -16,21 +17,14 @@ import org.slf4j.LoggerFactory;
 
 import com.java.mina.constant.Constant;
 import com.java.mina.core.filter.MyCharsetCodecFactory;
+import com.java.mina.util.PropertiesUtil;
 
 public class Server {
 	
 	public static final Logger logger = LoggerFactory.getLogger(Server.class);
 	
-	private static Integer BUFFER_SIZE;
-	
-	public static Integer SESSION_COUNT;
-	
 	private IoAcceptor acceptor;
 	
-	public Server(Integer bufferSize) {
-		BUFFER_SIZE = bufferSize;
-		SESSION_COUNT = 0;
-	}
 	
 	public void server() throws IOException {
 		acceptor = new NioSocketAcceptor();
@@ -43,7 +37,7 @@ public class Server {
 		acceptor.getFilterChain().addLast("threadPool", new ExecutorFilter(
 				Executors.newCachedThreadPool()));
 		acceptor.setHandler(new ServerHandler());
-		acceptor.getSessionConfig().setReadBufferSize(BUFFER_SIZE);
+		acceptor.getSessionConfig().setReadBufferSize(Constant.SERVER_BUFFER_SIZE);
 		acceptor.getSessionConfig().setIdleTime(IdleStatus.BOTH_IDLE, 10); // 10s
 		
 		acceptor.bind(new InetSocketAddress(Constant.TEXT_PORT)); // throw an IOException
@@ -73,7 +67,16 @@ public class Server {
 	}
 	
 	public static void main(String[] args) throws InterruptedException {
-		Server server = new Server(2048);
+		String path = Server.class.getResource("/").getPath() 
+				+ "/configure.properties";
+		Map<String, String> map = PropertiesUtil.getProperties(path);
+		Constant.SERVER_HOST = map.get("serverHost");
+		Constant.TEXT_PORT = Integer.valueOf(map.get("textPort"));
+		Constant.IMAGE_PORT = Integer.valueOf(map.get("imagePort"));
+		Constant.HEARTBEAT_PORT = Integer.valueOf(map.get("heartbeatPort"));
+		Constant.SERVER_BUFFER_SIZE = Integer.valueOf(map.get("bufferSize"));
+		Constant.SERVER_CACHE_SIZE = Integer.valueOf(map.get("cacheSize"));
+		Server server = new Server();
 		server.runServer();
 	}
 }

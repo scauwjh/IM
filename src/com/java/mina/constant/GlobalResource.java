@@ -16,7 +16,7 @@ public class GlobalResource {
 	
 	private final static Logger logger = LoggerFactory.getLogger(GlobalResource.class);
 	
-	public static LRUCache<String, List<Object>> messageQueue = new LRUCache<String, List<Object>>(Constant.CACHE_SIZE) {
+	public static LRUCache<String, List<Object>> messageQueue = new LRUCache<String, List<Object>>(Constant.SERVER_CACHE_SIZE) {
 		@Override
 		protected boolean ifRemove() {
 			return true; // true to remove the node when get method is called
@@ -33,5 +33,12 @@ public class GlobalResource {
 	public static HashMap<String, IoSession> sessionMap = new HashMap<String, IoSession>();
 	
 	public static HashMap<String, User> userMap = new HashMap<String, User>();
+	
+	public static Integer sessionCount = 0;
+	
+	public synchronized static Integer getSessionCount(Integer add) {
+		sessionCount += add;
+		return sessionCount;
+	}
 	
 }

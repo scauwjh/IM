@@ -43,8 +43,9 @@ public class MyCharsetEncoder extends ProtocolEncoderAdapter {
 			buffer.putString(msg.getReceiver() + "\n", encoder);
 			buffer.putString(msg.getTimeStamp() + "\n", encoder);
 			buffer.putInt(msg.getType());
-			buffer.putInt(msg.getMessage().getBytes().length);
-			buffer.putString(msg.getMessage(), encoder);
+			byte[] b = msg.getMessage().getBytes(Constant.CHARSET);
+			buffer.putInt(b.length);
+			buffer.put(b, 0, b.length);
 		} else if (message instanceof Image) {
 			// send image
 			Image image = (Image) message;

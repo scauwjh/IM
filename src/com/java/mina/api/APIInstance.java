@@ -58,21 +58,21 @@ public class APIInstance implements API {
 			if (Client.textSession.isClosing()) {
 				Debug.println("connect text port again!!");
 				conn = Client.connector.connect(new InetSocketAddress(
-						Constant.REMOTE_ADDRESS, Constant.TEXT_PORT));
+						Constant.SERVER_HOST, Constant.TEXT_PORT));
 				conn.awaitUninterruptibly();
 				Client.textSession = conn.getSession();
 			}
 			if (Client.imageSession.isClosing()) {
 				Debug.println("connect image port again!!");
 				conn = Client.connector.connect(new InetSocketAddress(
-						Constant.REMOTE_ADDRESS, Constant.IMAGE_PORT));
+						Constant.SERVER_HOST, Constant.IMAGE_PORT));
 				conn.awaitUninterruptibly();
 				Client.imageSession = conn.getSession();
 			}
 			if (Client.heartbeatSession.isClosing()) {
 				Debug.println("connect heartbeat port again!!");
 				conn = Client.connector.connect(new InetSocketAddress(
-						Constant.REMOTE_ADDRESS, Constant.HEARTBEAT_PORT));
+						Constant.SERVER_HOST, Constant.HEARTBEAT_PORT));
 				conn.awaitUninterruptibly();
 				Client.heartbeatSession = conn.getSession();
 			}
@@ -139,7 +139,7 @@ public class APIInstance implements API {
 			String receiver, Integer type, String message) {
 		try {
 			Message msg = new Message();
-			msg.setHeader(Constant.SEND);
+			msg.setHeader(Constant.MESSAGE);
 			msg.setSender(sender);
 			msg.setReceiver(receiver);
 			msg.setMessage(message);

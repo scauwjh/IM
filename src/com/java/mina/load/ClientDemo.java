@@ -1,4 +1,4 @@
-package com.java.mina.demo;
+package com.java.mina.load;
 
 import java.io.FileOutputStream;
 import java.util.Scanner;

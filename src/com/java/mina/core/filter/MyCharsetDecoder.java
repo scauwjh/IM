@@ -73,7 +73,7 @@ public class MyCharsetDecoder extends CumulativeProtocolDecoder {
 							out.write(object);
 							break;
 						}
-					} else if (header.equals(Constant.SEND)) {
+					} else if (header.equals(Constant.MESSAGE)) {
 						if (line  == 1) {
 							sender = getString();
 						} else if (line == 2) {
@@ -86,7 +86,9 @@ public class MyCharsetDecoder extends CumulativeProtocolDecoder {
 								in.reset();
 								return false;
 							}
-							message = in.getString(length, decoder);
+							byte[] tmp = new byte[length];
+							in.get(tmp, 0, length);
+							message = new String(tmp, Constant.CHARSET);
 							Message msg = new Message();
 							msg.setHeader(header);
 							msg.setSender(sender);
