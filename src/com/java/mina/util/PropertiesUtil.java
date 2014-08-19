@@ -39,7 +39,7 @@ public class PropertiesUtil {
 			while (em.hasMoreElements()) {
 				String key = (String) em.nextElement();
 				String value = properties.get(key).toString();
-				System.out.println(key + ":" + value);
+//				System.out.println(key + ":" + value);
 				map.put(key, value);
 			}
 			return map;

@@ -45,7 +45,7 @@ public class Server {
 		acceptor.bind(new InetSocketAddress(Constant.HEARTBEAT_PORT)); // throw an IOException
 		System.out.println("text port " + Constant.TEXT_PORT + " is listening...");
 		System.out.println("image port " + Constant.IMAGE_PORT + " is listening...");
-		System.out.println("heartbeat port " + Constant.IMAGE_PORT + " is listening...");
+		System.out.println("heartbeat port " + Constant.HEARTBEAT_PORT + " is listening...");
 	}
 	
 	public void runServer() {

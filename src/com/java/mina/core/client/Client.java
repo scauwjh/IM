@@ -92,7 +92,7 @@ public class Client {
 	 */
 	private void loadProperties() {
 		String path = this.getClass().getResource("/").getPath() 
-				+ "/configure.properties";
+				+ "/imconfigure.properties";
 		Map<String, String> map = PropertiesUtil.getProperties(path);
 		Constant.SERVER_HOST = map.get("serverHost");
 		Constant.TEXT_PORT = Integer.valueOf(map.get("textPort"));

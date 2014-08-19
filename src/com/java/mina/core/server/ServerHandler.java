@@ -188,7 +188,7 @@ public class ServerHandler extends IoHandlerAdapter {
 	@Override
 	public void sessionCreated(IoSession session) 
 			throws Exception {
-		logger.info("session created: " + GlobalResource.getSessionCount(-1));
+		logger.info("session created: " + GlobalResource.getSessionCount(1));
 		session.setAttribute(Constant.HEARTBEAT, System.currentTimeMillis());
 	}
 	
@@ -197,7 +197,7 @@ public class ServerHandler extends IoHandlerAdapter {
 			throws Exception {
 		String sessionAccount = (String) session.getAttribute(Constant.SESSION_ACCOUNT);
 		String account = (String) session.getAttribute(Constant.ACCOUNT);
-		logger.info("session closed: " + GlobalResource.getSessionCount(1));
+		logger.info("session closed: " + GlobalResource.getSessionCount(-1));
 		GlobalResource.sessionMap.remove(sessionAccount);
 		session.removeAttribute(Constant.SESSION_ACCOUNT);
 		session.removeAttribute(Constant.ACCOUNT);
