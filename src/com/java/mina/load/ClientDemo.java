@@ -73,7 +73,7 @@ public class ClientDemo extends Client {
 	}
 	
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 		client = new ClientDemo();
 		Scanner in = new Scanner(System.in);
 		System.out.println("enter a name for user: ");
@@ -117,6 +117,7 @@ public class ClientDemo extends Client {
 			}
 			if (message.equals("close")) {
 				heartbeatSession.close(false);
+				Thread.sleep(3000);
 				continue;
 			}
 			client.sendMessage(account, receiver, 1, message);

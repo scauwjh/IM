@@ -109,18 +109,30 @@ public class Client {
 	
 	/**
 	 * login
+	 * @param session
 	 * @param user
 	 * @param password
 	 * @return
 	 */
 	public Boolean login(String user, String password) {
-		if (!api.login(textSession, user, password)) {
+		if (!this.login(textSession, user, password)) {
+			return false;
+		} else if (!this.login(imageSession, user, password)) {
 			return false;
 		}
-		if (!api.login(imageSession, user, password)) {
-			return false;
-		}
-		return api.login(heartbeatSession, user, password);
+		return this.login(heartbeatSession, user, password);
+		
+	}
+	
+	/**
+	 * login
+	 * @param session
+	 * @param user
+	 * @param password
+	 * @return
+	 */
+	public Boolean login(IoSession session, String user, String password) {
+		return api.login(session, user, password);
 	}
 	
 	/**
