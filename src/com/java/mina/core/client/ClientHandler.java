@@ -29,7 +29,6 @@ public class ClientHandler extends IoHandlerAdapter {
 	
 	@Override
 	public void sessionClosed(IoSession session) throws Exception {
-		System.out.println("closed!!!!!!");
 		logger.warn("lost connection from server");
 	}
 }

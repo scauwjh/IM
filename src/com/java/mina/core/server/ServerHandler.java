@@ -34,43 +34,19 @@ public class ServerHandler extends IoHandlerAdapter {
 	@Override
 	public void messageReceived(IoSession session, Object message) 
 			throws Exception {
-		session.setAttribute(Constant.HEARTBEAT, System.currentTimeMillis());
-		String randStr = StringUtil.randString(32);
 		// if heartbeat
 		if (message instanceof Heartbeat) {
-			Boolean flag = true;
-			Debug.println("heartbeat is received");
-			Heartbeat hb = (Heartbeat) message;
-			String acc = hb.getAccount();
-			IoSession sess = GlobalResource.sessionMap.get(acc + Constant.TEXT_PORT);
-			if (sess == null) {
-				logger.warn("text port session is null for heartbeat");
-				flag = false;
-				return;
-			}
-			sess.setAttribute(Constant.HEARTBEAT, System.currentTimeMillis());
-			sess = GlobalResource.sessionMap.get(acc + Constant.IMAGE_PORT);
-			if (sess == null) {
-				logger.warn("text port session is null for heartbeat");
-				flag = false;
-				return;
-			}
-			sess.setAttribute(Constant.HEARTBEAT, System.currentTimeMillis());
-			if (flag)
-				Debug.println(acc + " is beat success!");
-			else
-				hb.setAccount(randStr);
-			hb.setTimeStamp(new Date().toString());
-			session.write(hb);
+			logger.info("heartbeat is received from: " + session.getRemoteAddress());
 			return;
 		}
 		if (message instanceof User) {
+			logger.info("login from: " + session.getRemoteAddress());
 			User user = (User) message;
 			String account = user.getUser();
 			String password = user.getPassword();
 			Login login = new Login();
 			if (!login.login(account, password)) {
-				user.setPassword(randStr);
+				user.setPassword("out of date");
 				user.setStatus(0);
 				session.write(user);
 				return;
@@ -80,10 +56,10 @@ public class ServerHandler extends IoHandlerAdapter {
 			GlobalResource.userMap.put(account, user);
 			session.setAttribute(Constant.ACCOUNT, account);
 			Debug.println("online count: " + GlobalResource.userMap.size());
-			String sessionAccount = account + AddressUtil.getPort(session);
+			String sessionAccount = account + AddressUtil.getLocalPort(session);
 			session.setAttribute(Constant.SESSION_ACCOUNT, sessionAccount);
 			GlobalResource.sessionMap.put(sessionAccount, session);
-			user.setPassword(randStr);
+			user.setPassword("out of date");
 			user.setStatus(1);
 			session.write(user);
 			
@@ -174,33 +150,23 @@ public class ServerHandler extends IoHandlerAdapter {
 	@Override
 	public void sessionIdle(IoSession session, IdleStatus status) 
 			throws Exception {
-		Long heartbeat = (Long) session.getAttribute(Constant.HEARTBEAT);
-		Long systemTime = System.currentTimeMillis();
-		if (heartbeat != null && (systemTime - heartbeat)
-				> Constant.SESSION_OVERTIME) {
-			closeSession(session);
-			logger.info("session from " + session.getRemoteAddress() + " is overtime");
-			Debug.println("beat time: " + heartbeat);
-			Debug.println("system time: " + systemTime);
-		}
+		
 	}
 	
 	@Override
 	public void sessionCreated(IoSession session) 
 			throws Exception {
 		logger.info("session created: " + GlobalResource.getSessionCount(1));
-		session.setAttribute(Constant.HEARTBEAT, System.currentTimeMillis());
 	}
 	
 	@Override
 	public void sessionClosed(IoSession session)
 			throws Exception {
+		logger.info("session closed: " + session.getLocalAddress() 
+				+ " session count: " + GlobalResource.getSessionCount(-1));
 		String sessionAccount = (String) session.getAttribute(Constant.SESSION_ACCOUNT);
 		String account = (String) session.getAttribute(Constant.ACCOUNT);
-		logger.info("session closed: " + GlobalResource.getSessionCount(-1));
 		GlobalResource.sessionMap.remove(sessionAccount);
-		session.removeAttribute(Constant.SESSION_ACCOUNT);
-		session.removeAttribute(Constant.ACCOUNT);
 		if (account == null) return;
 		if (!GlobalResource.sessionMap.containsKey(account + Constant.TEXT_PORT) &&
 				!GlobalResource.sessionMap.containsKey(account + Constant.IMAGE_PORT)) {
@@ -212,11 +178,12 @@ public class ServerHandler extends IoHandlerAdapter {
 	@Override
 	public void exceptionCaught(IoSession session, Throwable cause) 
 			throws Exception {
-		logger.error("exception catch from " + session.getRemoteAddress());
-		logger.error(cause.getMessage());
+		logger.error("exception catch from " + session.getRemoteAddress() 
+				+ ": " + cause.getLocalizedMessage());
+		Debug.printStackTrace(cause);
 	}
 	
-	protected void closeSession(IoSession session) {
+	private void closeSession(IoSession session) {
 		session.close(false);
 	}
 	

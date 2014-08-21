@@ -68,7 +68,7 @@ public class Server {
 	
 	public static void main(String[] args) throws InterruptedException {
 		String path = Server.class.getResource("/").getPath() 
-				+ "/configure.properties";
+				+ "/imconfigure.properties";
 		Map<String, String> map = PropertiesUtil.getProperties(path);
 		Constant.SERVER_HOST = map.get("serverHost");
 		Constant.TEXT_PORT = Integer.valueOf(map.get("textPort"));

@@ -6,8 +6,13 @@ import org.apache.mina.core.session.IoSession;
 
 public class AddressUtil {
 	
-	public static Integer getPort(IoSession session) {
+	public static Integer getLocalPort(IoSession session) {
 		InetSocketAddress address = (InetSocketAddress) session.getLocalAddress();
+		return address.getPort();
+	}
+	
+	public static Integer getRemotePort(IoSession session) {
+		InetSocketAddress address = (InetSocketAddress) session.getRemoteAddress();
 		return address.getPort();
 	}
 }

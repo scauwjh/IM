@@ -23,7 +23,7 @@ public interface API {
 	 * @param password
 	 * @return
 	 */
-	public Boolean login(String account, String password);
+	public Boolean login(IoSession session, String account, String password);
 	
 	/**
 	 * 发送文字信息
@@ -42,7 +42,7 @@ public interface API {
 	 * @param account
 	 * @return
 	 */
-	public Boolean sendHeartbeat(String account);
+	public Boolean sendHeartbeat(IoSession session, String account);
 	
 	/**
 	 * 发送图片

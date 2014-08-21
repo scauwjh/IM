@@ -33,10 +33,6 @@ public class Constant {
 	 */
 	public static final Long LOGIN_OVERTIME = 10000L;
 	/**
-	 * heart beat overtime: 10s
-	 */
-	public static final Long HEARTBEAT_OVERTIME = 10000L;
-	/**
 	 * send message overtime: 10s
 	 */
 	public static final Long MESSAGE_OVERTIME = 10000L;
@@ -49,11 +45,11 @@ public class Constant {
 	
 	public static String SERVER_HOST = "127.0.0.1";
 	
-	public static Integer TEXT_PORT = 9999;
+	public static Integer TEXT_PORT = 7777;
 	
 	public static Integer IMAGE_PORT = 8888;
 	
-	public static Integer HEARTBEAT_PORT = 7777;
+	public static Integer HEARTBEAT_PORT = 9999;
 	
 	public static Integer SERVER_BUFFER_SIZE = 4096;
 	

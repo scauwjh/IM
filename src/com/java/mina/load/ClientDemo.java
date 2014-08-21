@@ -5,8 +5,8 @@ import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import com.java.mina.api.API;
-import com.java.mina.api.APIInstance;
+import org.apache.mina.core.session.IoSession;
+
 import com.java.mina.core.client.Client;
 import com.java.mina.core.model.Image;
 import com.java.mina.core.model.Message;
@@ -14,9 +14,14 @@ import com.java.mina.util.StringUtil;
 
 public class ClientDemo extends Client {
 	
-	public static Integer count = 0;
-	
 	public static Integer errCount = 0;
+	
+	public static String account;
+	
+	public static String password;
+	
+	public static ClientDemo client;
+	
 	
 	/**
 	 * 重写文字消息接收的方法
@@ -39,7 +44,8 @@ public class ClientDemo extends Client {
 		System.out.println("image received form: " + msg.getSender());
 		System.out.println("extra: " + msg.getExtra());
 		System.out.println("timeStamp: " + msg.getTimeStamp());
-		String file = "C:\\Users\\asus\\Desktop\\rec" + StringUtil.randString(5)  + ".jpg";
+		String file = "C:\\Users\\asus\\Desktop\\rec-(" + account + ")-from-(" + msg.getSender() + ")" 
+				+ StringUtil.randString(5)  + ".jpg";
 		try {
 			FileOutputStream out = new FileOutputStream(file);
 			out.write(msg.getImage());
@@ -47,6 +53,15 @@ public class ClientDemo extends Client {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	/**
+	 * 重写session关闭的方法
+	 */
+	@Override
+	public void closeSession(IoSession session) {
+		System.out.println("!!!!!session is closed!!!!");
+		api.login(session, account, password);
 	}
 	
 	/**
@@ -59,13 +74,13 @@ public class ClientDemo extends Client {
 	
 	
 	public static void main(String[] args) {
-		final ClientDemo client = new ClientDemo();
+		client = new ClientDemo();
 		Scanner in = new Scanner(System.in);
 		System.out.println("enter a name for user: ");
-		final String sender = in.next();
-		final String password = "123456";
+		account = in.next();
+		password = "123456";
 		// login
-		if (!client.login(sender, password)) {
+		if (!client.login(account, password)) {
 			System.out.println("login failed!");
 			in.close();
 			return;
@@ -73,24 +88,16 @@ public class ClientDemo extends Client {
 		
 		TimerTask task = new TimerTask() {  
 	        public void run() {
-	        	if (count == 0 && client.sendHeartbeat(sender))
+	        	if (client.sendHeartbeat(account))
 					System.out.println("beat succeed!");
 				else {
 					errCount ++;
 					System.out.println("beat failed!");
-					if (count++ > 4) {
-						if (client.login(sender, password)) {
-							System.out.println("login succeed!");
-							count = 0;
-						} else {
-							System.out.println("login failed!");
-						}
-					}
 				}
 	        }     
 	    };
 		Timer timer = new Timer(true);
-		timer.schedule(task, 2000, 5000);
+		timer.schedule(task, 2000, 3000);
 		
 		// send message service
 		while(true) {
@@ -105,23 +112,14 @@ public class ClientDemo extends Client {
 			if (message.equals("image")) {
 				String path = "C:\\Users\\asus\\Desktop\\tmp\\123.png";
 				// use multiple thread to finish the service
-				client.sendImage(sender, receiver, "extra", path);
+				client.sendImage(account, receiver, "extra", path);
 				continue;
 			}
-			if (message.equals("check")) {
-				API api = new APIInstance();
-				if (api.ifOnline(receiver))
-					System.out.println(receiver + " is online");
-				else
-					System.out.println(receiver + " is not online");
+			if (message.equals("close")) {
+				heartbeatSession.close(false);
 				continue;
 			}
-			if (message.equals("how")) {
-				API api = new APIInstance();
-				System.out.println("online count: " + api.onlineCount());
-				continue;
-			}
-			client.sendMessage(sender, receiver, 1, message);
+			client.sendMessage(account, receiver, 1, message);
 		}
 		in.close();
 	}

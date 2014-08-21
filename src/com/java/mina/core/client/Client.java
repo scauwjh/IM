@@ -57,6 +57,11 @@ public class Client {
 				logger.info("message received from: " + session.getRemoteAddress());
 				objectReceived(message);
 			}
+			@Override
+			public void sessionClosed(IoSession session) throws Exception {
+				logger.warn("lost connection from server");
+				closeSession(session);
+			}
 		}); // add handler
 		
 		
@@ -109,7 +114,13 @@ public class Client {
 	 * @return
 	 */
 	public Boolean login(String user, String password) {
-		return api.login(user, password);
+		if (!api.login(textSession, user, password)) {
+			return false;
+		}
+		if (!api.login(imageSession, user, password)) {
+			return false;
+		}
+		return api.login(heartbeatSession, user, password);
 	}
 	
 	/**
@@ -129,7 +140,7 @@ public class Client {
 	 * @return
 	 */
 	public Boolean sendHeartbeat(String account) {
-		return api.sendHeartbeat(account);
+		return api.sendHeartbeat(heartbeatSession, account);
 	}
 	
 	/**
@@ -168,6 +179,15 @@ public class Client {
 	 * @param string
 	 */
 	public void stringReceived(String string) {
+		
+	}
+	
+	/**
+	 * <p>session closed</p>
+	 * <p>override this method to write your service</p>
+	 * @param string
+	 */
+	public void closeSession(IoSession session) {
 		
 	}
 	
