@@ -6,11 +6,19 @@ public class Constant {
 	
 	public static final String SESSION_ACCOUNT = "session_account";
 	
-	public static final String LOGIN = "login";
+	public static final String TYPE_LOGIN = "loginType";
+	
+	public static final String TYPE_SEND = "sendType";
+	
+	public static final String CONTENT_TYPE_HEARTBEAT = "contentTypeHeartbeat";
+	
+	public static final String CONTENT_TYPE_MESSAGE = "contentTypeMessage";
+	
+	public static final String CONTENT_TYPE_IMAGE = "contentTypeImage";
+	
+	public static final String CONTENT_TYPE_LOGIN = "contentTypeLogin";
 	
 	public static final String HEARTBEAT = "heartbeat";
-	
-	public static final String MESSAGE = "message";
 	
 	public static final String IMAGE = "image";
 	

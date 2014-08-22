@@ -14,8 +14,6 @@ import org.slf4j.LoggerFactory;
 import com.java.mina.constant.Constant;
 import com.java.mina.core.client.vo.ClientUtil;
 import com.java.mina.core.filter.MyCharsetCodecFactory;
-import com.java.mina.core.model.Image;
-import com.java.mina.core.model.Message;
 import com.java.mina.util.Debug;
 import com.java.mina.util.PropertiesUtil;
 
@@ -47,14 +45,14 @@ public class Client {
 		connector = new NioSocketConnector();
 		connector.setConnectTimeoutMillis(Constant.CONNECT_OVERTIME); // set connect timeout
 		connector.getFilterChain().addLast("codec", new ProtocolCodecFilter(
-				new MyCharsetCodecFactory(Constant.CHARSET))); // add charset filter
+				new MyCharsetCodecFactory())); // add charset filter
 		connector.getSessionConfig().setUseReadOperation(true); // set use read operation
 		connector.setHandler(new ClientHandler() {
 			@Override
 			public void messageReceived(IoSession session, Object message)
 					throws Exception {
 				logger.info("message received from: " + session.getRemoteAddress());
-				objectReceived(message);
+				messageHandler(message);
 			}
 			@Override
 			public void sessionClosed(IoSession session) throws Exception {
@@ -120,7 +118,6 @@ public class Client {
 			return false;
 		}
 		return this.login(heartbeatSession, user, password);
-		
 	}
 	
 	/**
@@ -138,81 +135,62 @@ public class Client {
 	 * send message
 	 * @param sender
 	 * @param receiver
+	 * @param accessToken
+	 * @param params
 	 * @param message
 	 * @return
 	 */
-	public Boolean sendMessage(String sender, String receiver, Integer type, String message) {
-		return util.sendMessage(textSession, sender, receiver, type, message);
+	public Boolean sendMessage(String sender, String receiver, 
+			String accessToken, String params, String message) {
+		return util.sendMessage(textSession, sender, receiver, 
+				accessToken, params, message);
 	}
 	
 	/**
 	 * send heartbeat
 	 * @param account
+	 * @param accessToken
 	 * @return
 	 */
-	public Boolean sendHeartbeat(String account) {
-		return util.sendHeartbeat(heartbeatSession, account);
+	public Boolean sendHeartbeat(String account, String accessToken) {
+		return util.sendHeartbeat(heartbeatSession, account,
+				null, accessToken);
 	}
 	
 	/**
 	 * send image
 	 * @param sender
 	 * @param receiver
-	 * @param extra
+	 * @param accessToken
+	 * @param params
 	 * @param filePath
 	 * @return
 	 */
-	public boolean sendImage(String sender, String receiver, String extra, String filePath) {
-		return util.sendImage(imageSession, sender, receiver, extra, filePath);
+	public boolean sendImage(String sender, String receiver, 
+			String accessToken, String params, String filePath) {
+		return util.sendImage(imageSession, sender, receiver, 
+				accessToken, params,filePath);
 	}
 	
+	//---------------------------------------
+	// methods for overriding
+	//---------------------------------------
 	/**
-	 * <p>received a message</p>
+	 * <p>message handler</p>
 	 * <p>override this method to write your service</p>
 	 * @param message
+	 * @throws Exception
 	 */
-	public void messageReceived(Message message) {
-		
-	}
-	
-	/**
-	 * <p>received an image</p>
-	 * <p>override this method to write your service</p>
-	 * @param image
-	 */
-	public void imageReceived(Image image) {
-		
-	}
-	
-	/**
-	 * <p>received a string</p>
-	 * <p>override this method to write your service</p>
-	 * @param string
-	 */
-	public void stringReceived(String string) {
+	protected void messageHandler(Object message) throws Exception {
 		
 	}
 	
 	/**
 	 * <p>session closed</p>
 	 * <p>override this method to write your service</p>
-	 * @param string
+	 * @param session
 	 */
 	public void closeSession(IoSession session) {
 		
-	}
-	
-	/**
-	 * message object received
-	 * @param message
-	 * @throws Exception
-	 */
-	protected void objectReceived(Object message) throws Exception {
-		if (message instanceof Message)
-			messageReceived((Message) message);
-		else if (message instanceof Image)
-			imageReceived((Image) message);
-		else if (message instanceof String)
-			stringReceived((String) message);
 	}
 }

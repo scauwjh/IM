@@ -7,7 +7,6 @@ import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.java.mina.core.model.User;
 import com.java.mina.core.service.OfflineMessage;
 import com.java.mina.util.lrucache.LRUCache;
 import com.java.mina.util.lrucache.LRUEntry;
@@ -32,7 +31,7 @@ public class GlobalResource {
 	
 	public static HashMap<String, IoSession> sessionMap = new HashMap<String, IoSession>();
 	
-	public static HashMap<String, User> userMap = new HashMap<String, User>();
+	public static HashMap<String, String> userMap = new HashMap<String, String>();
 	
 	public static Integer sessionCount = 0;
 	

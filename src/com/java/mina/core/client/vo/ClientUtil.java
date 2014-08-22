@@ -2,6 +2,7 @@ package com.java.mina.core.client.vo;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.util.Date;
 
@@ -14,10 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import com.java.mina.constant.Constant;
 import com.java.mina.core.client.Client;
-import com.java.mina.core.model.Heartbeat;
-import com.java.mina.core.model.Image;
-import com.java.mina.core.model.Message;
-import com.java.mina.core.model.User;
+import com.java.mina.core.model.DataPacket;
 import com.java.mina.util.AddressUtil;
 import com.java.mina.util.Debug;
 import com.java.mina.util.ImageUtil;
@@ -53,16 +51,17 @@ public class ClientUtil {
 					Client.heartbeatSession = session;
 				}
 			}
-			User user = new User();
-			user.setHeader(Constant.LOGIN);
-			user.setUser(account);
-			user.setPassword(password);
-			user.setTimeStamp(new Date().toString());
-			user.setStatus(0);
+			DataPacket packet = new DataPacket();
+			packet.setType(Constant.TYPE_LOGIN);
+			packet.setSender(account);
+			packet.setAccessToken(password);
+			packet.setContentType(Constant.CONTENT_TYPE_LOGIN);
+			packet.setTimeStamp(new Date().toString());
+			packet.setStatus("0");
 			// send login message
-			WriteFuture write = session.write(user);
+			WriteFuture write = session.write(packet);
 			if (!write.awaitUninterruptibly(Constant.MESSAGE_OVERTIME)) {
-				Debug.println("failed to write: " + session.getRemoteAddress());
+				Debug.println("Failed to write: " + session.getRemoteAddress());
 				return false;
 			}
 			if (!write.isWritten())
@@ -70,16 +69,16 @@ public class ClientUtil {
 			// read return message
 			ReadFuture read = session.read();
 			if (read.awaitUninterruptibly(Constant.MESSAGE_OVERTIME)) {
-				User retMsg = (User) read.getMessage();
-				if (retMsg.getStatus().equals(1)) {
-					Debug.println("login retrun message is correct!");
+				packet = (DataPacket) read.getMessage();
+				if (packet.getStatus().equals("1")) {
+					Debug.println("Login succeed");
 					return true;
 				} else {
-					Debug.println("login retrun message is not correct!");
+					Debug.println("Login failed");
 					return false;
 				}
 			} else {
-				Debug.println("failed to read: " + session.getRemoteAddress());
+				Debug.println("Failed to read: " + session.getRemoteAddress());
 				return false;
 			}
 		} catch (Exception e) {
@@ -126,45 +125,76 @@ public class ClientUtil {
 	
 	private IoSession connectAgain(Integer port) {
 		ConnectFuture conn = null;
-		Debug.println("connect to port: " + port + " again!!");
+		Debug.println("Connect to port: " + port + " again!!");
 		conn = Client.connector.connect(new InetSocketAddress(
 				Constant.SERVER_HOST, port));
 		if (conn.awaitUninterruptibly(Constant.CONNECT_OVERTIME)) {
 			return conn.getSession();
 		} else {
-			Debug.println("failed to connect port: " + port);
+			Debug.println("Failed to connect port: " + port);
 			return null;
 		}
 	}
 	
 	/**
-	 * 发送文字信息
+	 * send data
 	 * @param session
 	 * @param sender
 	 * @param receiver
-	 * @param message
+	 * @param accessToken
+	 * @param status
+	 * @param contentType
+	 * @param parameters
+	 * @param body
 	 * @return
 	 */
-	public Boolean sendMessage(IoSession session, String sender,
-			String receiver, Integer type, String message) {
+	private Boolean sendData(IoSession session, String sender, String receiver, 
+			String accessToken, String status, String contentType, String parameters, byte[] body) {
 		try {
-			Message msg = new Message();
-			msg.setHeader(Constant.MESSAGE);
+			DataPacket msg = new DataPacket();
+			msg.setType(Constant.TYPE_SEND);
 			msg.setSender(sender);
 			msg.setReceiver(receiver);
-			msg.setMessage(message);
-			msg.setType(type);
+			msg.setAccessToken(accessToken);
+			msg.setStatus(status);
+			msg.setContentType(contentType);
 			msg.setTimeStamp(new Date().toString());
+			msg.setParameters(parameters);
+			msg.setBody(body);
 			WriteFuture write = session.write(msg);
 			if (!write.awaitUninterruptibly(Constant.MESSAGE_OVERTIME)) {
-				Debug.println("failed to write!!!");
+				Debug.println("Failed to write!!!");
 				return false;
 			}
 			if (write.isWritten())
 				return true;
 			return false;
 		} catch (Exception e) {
-			logger.error("send message error: " + e.getLocalizedMessage());
+			logger.error("Send data error: " + e.getLocalizedMessage());
+			Debug.printStackTrace(e);
+			return false;
+		}
+	}
+	
+	
+	/**
+	 * 发送文字信息
+	 * @param session
+	 * @param sender
+	 * @param receiver
+	 * @param accessToken
+	 * @param params
+	 * @param message
+	 * @return
+	 */
+	public Boolean sendMessage(IoSession session, String sender, String receiver,
+			String accessToken, String params, String message) {
+		try {
+			byte[] body = message.getBytes(Constant.CHARSET);
+			return sendData(session, sender, receiver, accessToken, "1", 
+					Constant.CONTENT_TYPE_MESSAGE, params, body);
+		} catch (UnsupportedEncodingException e) {
+			logger.error("Send message error: " + e.getLocalizedMessage());
 			Debug.printStackTrace(e);
 			return false;
 		}
@@ -172,28 +202,16 @@ public class ClientUtil {
 	
 	/**
 	 * 发送心跳包
+	 * @param session
 	 * @param account
+	 * @param accountToken
+	 * @param params
 	 * @return
 	 */
-	public Boolean sendHeartbeat(IoSession session, String account) {
-		try {
-			Heartbeat hb = new Heartbeat();
-			hb.setAccount(account);
-			hb.setHeader(Constant.HEARTBEAT);
-			hb.setTimeStamp(new Date().toString());
-			WriteFuture write = session.write(hb);
-			if (!write.awaitUninterruptibly(Constant.MESSAGE_OVERTIME)) {
-				Debug.println("failed to write!!!");
-				return false;
-			}
-			if (write.isWritten())
-				return true;
-			return false;
-		} catch (Exception e) {
-			logger.error("send heartbeat error: " + e.getMessage());
-			Debug.printStackTrace(e);
-			return false;
-		}
+	public Boolean sendHeartbeat(IoSession session, String account, 
+			String accessToken, String params) {
+		return sendData(session, account, account, accessToken, "1", 
+				Constant.CONTENT_TYPE_HEARTBEAT, params, null);
 	}
 	
 	/**
@@ -201,32 +219,21 @@ public class ClientUtil {
 	 * @param session
 	 * @param sender
 	 * @param receiver
-	 * @param extra
+	 * @param accessToken
+	 * @param params
 	 * @param filePath
 	 * @return
 	 */
 	public Boolean sendImage(IoSession session, String sender, 
-			String receiver, String extra, String filePath) {
+			String receiver, String accessToken, String params, String filePath) {
+		InputStream in;
 		try {
-			Image img = new Image();
-			img.setHeader(Constant.IMAGE);
-			img.setSender(sender);
-			img.setReceiver(receiver);
-			img.setExtra(extra);
-			img.setTimeStamp(new Date().toString());
-			InputStream in = new FileInputStream(filePath);
+			in = new FileInputStream(filePath);
 			byte[] dst = ImageUtil.imageCompress(in, 0.9, 1.0);
-			img.setImage(dst);
-			WriteFuture write = session.write(img);
-			if (!write.awaitUninterruptibly(Constant.IMAGE_OVERTIME)) {
-				Debug.println("failed to write!!!");
-				return false;
-			}
-			if (write.isWritten())
-				return true;
-			return false;
+			return sendData(session, sender, receiver, accessToken, "1", 
+					Constant.CONTENT_TYPE_IMAGE, params, dst);
 		} catch (Exception e) {
-			logger.error("send image error: " + e.getLocalizedMessage());
+			logger.error("Send image error: " + e.getLocalizedMessage());
 			Debug.printStackTrace(e);
 			return false;
 		}

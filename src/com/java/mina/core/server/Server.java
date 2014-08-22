@@ -32,7 +32,7 @@ public class Server {
 		acceptor.getFilterChain().addLast("logger", new LoggingFilter());
 		// 编码解码过滤器
 		acceptor.getFilterChain().addLast("codec", new ProtocolCodecFilter(
-				new MyCharsetCodecFactory(Constant.CHARSET)));
+				new MyCharsetCodecFactory()));
 		// 多线程处理过滤器
 		acceptor.getFilterChain().addLast("threadPool", new ExecutorFilter(
 				Executors.newCachedThreadPool()));

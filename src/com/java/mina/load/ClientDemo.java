@@ -7,9 +7,9 @@ import java.util.TimerTask;
 
 import org.apache.mina.core.session.IoSession;
 
+import com.java.mina.constant.Constant;
 import com.java.mina.core.client.Client;
-import com.java.mina.core.model.Image;
-import com.java.mina.core.model.Message;
+import com.java.mina.core.model.DataPacket;
 import com.java.mina.util.StringUtil;
 
 public class ClientDemo extends Client {
@@ -24,32 +24,25 @@ public class ClientDemo extends Client {
 	
 	
 	/**
-	 * 重写文字消息接收的方法
+	 * 重写数据接收的方法
 	 */
 	@Override
-	public void messageReceived(Message message) {
-		Message msg = (Message) message;
-		System.out.println("message received form: " + msg.getSender());
-		System.out.println("timeStamp: " + msg.getTimeStamp());
-		System.out.println("type: " + msg.getType());
-		System.out.println("message: " + msg.getMessage());
-	}
-	
-	/**
-	 * 重写图片接收的方法
-	 */
-	@Override
-	public void imageReceived(Image message) {
-		Image msg = (Image) message;
-		System.out.println("image received form: " + msg.getSender());
-		System.out.println("extra: " + msg.getExtra());
-		System.out.println("timeStamp: " + msg.getTimeStamp());
-		String file = "C:\\Users\\asus\\Desktop\\rec-(" + account + ")-from-(" + msg.getSender() + ")" 
-				+ StringUtil.randString(5)  + ".jpg";
+	public void messageHandler(Object message) {
 		try {
-			FileOutputStream out = new FileOutputStream(file);
-			out.write(msg.getImage());
-			out.close();
+			DataPacket packet = (DataPacket) message;
+			System.out.println("Image received form: " + packet.getSender());
+			System.out.println("Content type: " + packet.getContentType());
+			System.out.println("TimeStamp: " + packet.getTimeStamp());
+			if (packet.getContentType().equals(Constant.CONTENT_TYPE_IMAGE)) {
+				String file = "C:\\Users\\asus\\Desktop\\rec-(" + account + ")-from-(" + packet.getSender() + ")" 
+						+ StringUtil.randString(5)  + ".jpg";
+				FileOutputStream out = new FileOutputStream(file);
+				out.write(packet.getBody());
+				out.close();
+			} else if (packet.getContentType().equals(Constant.CONTENT_TYPE_MESSAGE)) {
+				String body = new String(packet.getBody(), Constant.CHARSET);
+				System.out.println("Received message: " + body);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -62,14 +55,6 @@ public class ClientDemo extends Client {
 	public void closeSession(IoSession session) {
 		System.out.println("!!!!!session is closed!!!!");
 		client.login(session, account, password);
-	}
-	
-	/**
-	 * 重写string接收的方法
-	 */
-	@Override
-	public void stringReceived(String message) {
-		System.out.println("received retMsg from server: " + message);
 	}
 	
 	
@@ -88,7 +73,7 @@ public class ClientDemo extends Client {
 		
 		TimerTask task = new TimerTask() {  
 	        public void run() {
-	        	if (client.sendHeartbeat(account))
+	        	if (client.sendHeartbeat(account, password))
 					System.out.println("beat succeed!");
 				else {
 					errCount ++;
@@ -112,7 +97,7 @@ public class ClientDemo extends Client {
 			if (message.equals("image")) {
 				String path = "C:\\Users\\asus\\Desktop\\tmp\\123.png";
 				// use multiple thread to finish the service
-				client.sendImage(account, receiver, "extra", path);
+				client.sendImage(account, receiver, password, "params", path);
 				continue;
 			}
 			if (message.equals("close")) {
@@ -124,7 +109,7 @@ public class ClientDemo extends Client {
 				client.login(account, password);
 				continue;
 			}
-			client.sendMessage(account, receiver, 1, message);
+			client.sendMessage(account, receiver, password, "params", message);
 		}
 		in.close();
 	}
