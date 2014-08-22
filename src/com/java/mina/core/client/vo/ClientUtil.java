@@ -1,4 +1,4 @@
-package com.java.mina.api;
+package com.java.mina.core.client.vo;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.java.mina.constant.Constant;
-import com.java.mina.constant.GlobalResource;
 import com.java.mina.core.client.Client;
 import com.java.mina.core.model.Heartbeat;
 import com.java.mina.core.model.Image;
@@ -23,27 +22,9 @@ import com.java.mina.util.AddressUtil;
 import com.java.mina.util.Debug;
 import com.java.mina.util.ImageUtil;
 
-public class APIInstance implements API {
+public class ClientUtil {
 	
-	public final static Logger logger = LoggerFactory.getLogger(APIInstance.class);
-	
-	
-	/**
-	 * 服务器总在线人数
-	 * @return
-	 */
-	public Integer onlineCount() {
-		return GlobalResource.userMap.size();
-	}
-	
-	/**
-	 * 检查用户是否在线
-	 * @param account
-	 * @return
-	 */
-	public Boolean ifOnline(String account) {
-		return GlobalResource.userMap.containsKey(account);
-	}
+	public final static Logger logger = LoggerFactory.getLogger(ClientUtil.class);
 	
 	/**
 	 * 发送登录信息
@@ -57,6 +38,9 @@ public class APIInstance implements API {
 			Debug.println("#####login begin#####");
 			if (session.isClosing()) {
 				int port = AddressUtil.getRemotePort(session);
+				if (port < 0) {
+					return initAgain(account, password);
+				}
 				IoSession sess = connectAgain(port);
 				if (sess == null)
 					return false;
@@ -105,6 +89,41 @@ public class APIInstance implements API {
 		}
 	}
 	
+	private Boolean initAgain(String account, String password) {
+		IoSession sess = connectAgain(Constant.TEXT_PORT);
+		if (sess == null) {
+			Debug.println("Failed to init text session");
+			return false;
+		}
+		Client.textSession = sess;
+		if (!login(Client.textSession, account, password)) {
+			Debug.println("Failed to login again at text session");
+			return false;
+		}
+		sess = connectAgain(Constant.IMAGE_PORT);
+		if (sess == null) {
+			Debug.println("Failed to init image session");
+			return false;
+		}
+		Client.imageSession = sess;
+		if (!login(Client.imageSession, account, password)) {
+			Debug.println("Failed to login again at image session");
+			return false;
+		}
+		sess = connectAgain(Constant.HEARTBEAT_PORT);
+		if (sess == null) {
+			Debug.println("Failed to init heartbeat session");
+			return false;
+		}
+		Client.heartbeatSession = sess;
+		if (!login(Client.heartbeatSession, account, password)) {
+			Debug.println("Failed to login again at hearbate session");
+			return false;
+		}
+		Debug.println("Succeed to init again");
+		return true;
+	}
+	
 	private IoSession connectAgain(Integer port) {
 		ConnectFuture conn = null;
 		Debug.println("connect to port: " + port + " again!!");
@@ -116,8 +135,6 @@ public class APIInstance implements API {
 			Debug.println("failed to connect port: " + port);
 			return null;
 		}
-		
-		
 	}
 	
 	/**

@@ -1,18 +1,25 @@
 package com.java.mina.util;
 
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 
 import org.apache.mina.core.session.IoSession;
 
 public class AddressUtil {
 	
 	public static Integer getLocalPort(IoSession session) {
-		InetSocketAddress address = (InetSocketAddress) session.getLocalAddress();
+		SocketAddress socketAddress = session.getLocalAddress();
+		if (socketAddress == null)
+			return -1;
+		InetSocketAddress address = (InetSocketAddress) socketAddress;
 		return address.getPort();
 	}
 	
 	public static Integer getRemotePort(IoSession session) {
-		InetSocketAddress address = (InetSocketAddress) session.getRemoteAddress();
+		SocketAddress socketAddress = session.getRemoteAddress();
+		if (socketAddress == null)
+			return -1;
+		InetSocketAddress address = (InetSocketAddress) socketAddress;
 		return address.getPort();
 	}
 }

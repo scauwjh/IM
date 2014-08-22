@@ -11,9 +11,8 @@ import org.apache.mina.transport.socket.nio.NioSocketConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.java.mina.api.API;
-import com.java.mina.api.APIInstance;
 import com.java.mina.constant.Constant;
+import com.java.mina.core.client.vo.ClientUtil;
 import com.java.mina.core.filter.MyCharsetCodecFactory;
 import com.java.mina.core.model.Image;
 import com.java.mina.core.model.Message;
@@ -32,13 +31,13 @@ public class Client {
 	
 	public static IoSession heartbeatSession;
 	
-	protected ConnectFuture textFuture;
+	private ConnectFuture textFuture;
 	
-	protected ConnectFuture imageFuture;
+	private ConnectFuture imageFuture;
 	
-	protected ConnectFuture heartbeatFuture;
+	private ConnectFuture heartbeatFuture;
 	
-	protected  API api;
+	private  ClientUtil util;
 	
 	
 	public Client() { 
@@ -89,7 +88,7 @@ public class Client {
 		Debug.println("heartbeat port: " + Constant.HEARTBEAT_PORT);
 		
 		// im api init
-		api = new APIInstance();
+		util = new ClientUtil();
 	}
 	
 	/**
@@ -132,7 +131,7 @@ public class Client {
 	 * @return
 	 */
 	public Boolean login(IoSession session, String user, String password) {
-		return api.login(session, user, password);
+		return util.login(session, user, password);
 	}
 	
 	/**
@@ -143,7 +142,7 @@ public class Client {
 	 * @return
 	 */
 	public Boolean sendMessage(String sender, String receiver, Integer type, String message) {
-		return api.sendMessage(textSession, sender, receiver, type, message);
+		return util.sendMessage(textSession, sender, receiver, type, message);
 	}
 	
 	/**
@@ -152,7 +151,7 @@ public class Client {
 	 * @return
 	 */
 	public Boolean sendHeartbeat(String account) {
-		return api.sendHeartbeat(heartbeatSession, account);
+		return util.sendHeartbeat(heartbeatSession, account);
 	}
 	
 	/**
@@ -164,7 +163,7 @@ public class Client {
 	 * @return
 	 */
 	public boolean sendImage(String sender, String receiver, String extra, String filePath) {
-		return api.sendImage(imageSession, sender, receiver, extra, filePath);
+		return util.sendImage(imageSession, sender, receiver, extra, filePath);
 	}
 	
 	/**

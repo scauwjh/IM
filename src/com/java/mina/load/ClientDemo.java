@@ -61,7 +61,7 @@ public class ClientDemo extends Client {
 	@Override
 	public void closeSession(IoSession session) {
 		System.out.println("!!!!!session is closed!!!!");
-		api.login(session, account, password);
+		client.login(session, account, password);
 	}
 	
 	/**
@@ -97,7 +97,7 @@ public class ClientDemo extends Client {
 	        }     
 	    };
 		Timer timer = new Timer(true);
-		timer.schedule(task, 2000, 3000);
+		timer.schedule(task, 2000, 30000);
 		
 		// send message service
 		while(true) {
@@ -118,6 +118,10 @@ public class ClientDemo extends Client {
 			if (message.equals("close")) {
 				heartbeatSession.close(false);
 				Thread.sleep(3000);
+				continue;
+			}
+			if (message.equals("init")) {
+				client.login(account, password);
 				continue;
 			}
 			client.sendMessage(account, receiver, 1, message);
