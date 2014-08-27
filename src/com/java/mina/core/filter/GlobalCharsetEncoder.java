@@ -8,7 +8,7 @@ import org.apache.mina.filter.codec.ProtocolEncoderOutput;
 import com.java.mina.core.model.DataPacket;
 import com.java.mina.core.model.BytePacket;
 
-public class MyCharsetEncoder extends ProtocolEncoderAdapter {
+public class GlobalCharsetEncoder extends ProtocolEncoderAdapter {
 	
 	/**
 	 * <p>header:</p> 

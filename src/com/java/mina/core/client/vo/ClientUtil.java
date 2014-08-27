@@ -47,8 +47,6 @@ public class ClientUtil {
 					Client.textSession = session;
 				} else if (port == Constant.IMAGE_PORT) {
 					Client.imageSession = session;
-				} else if (port == Constant.HEARTBEAT_PORT) {
-					Client.heartbeatSession = session;
 				}
 			}
 			DataPacket packet = new DataPacket();
@@ -107,16 +105,6 @@ public class ClientUtil {
 		Client.imageSession = sess;
 		if (!login(Client.imageSession, account, password)) {
 			Debug.println("Failed to login again at image session");
-			return false;
-		}
-		sess = connectAgain(Constant.HEARTBEAT_PORT);
-		if (sess == null) {
-			Debug.println("Failed to init heartbeat session");
-			return false;
-		}
-		Client.heartbeatSession = sess;
-		if (!login(Client.heartbeatSession, account, password)) {
-			Debug.println("Failed to login again at hearbate session");
 			return false;
 		}
 		Debug.println("Succeed to init again");

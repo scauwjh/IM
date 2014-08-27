@@ -10,9 +10,9 @@ import org.slf4j.LoggerFactory;
 import com.java.mina.core.model.BytePacket;
 import com.java.mina.util.Debug;
 
-public class MyCharsetDecoder extends CumulativeProtocolDecoder {
+public class GlobalCharsetDecoder extends CumulativeProtocolDecoder {
 
-	public final static Logger logger = LoggerFactory.getLogger(MyCharsetDecoder.class);
+	public final static Logger logger = LoggerFactory.getLogger(GlobalCharsetDecoder.class);
 	
 	@Override
 	protected boolean doDecode(IoSession session, IoBuffer in,

@@ -2,8 +2,6 @@ package com.java.mina.load;
 
 import java.io.FileOutputStream;
 import java.util.Scanner;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import org.apache.mina.core.session.IoSession;
 
@@ -71,25 +69,11 @@ public class ClientDemo extends Client {
 			return;
 		}
 		
-		TimerTask task = new TimerTask() {  
-	        public void run() {
-	        	if (client.sendHeartbeat(account, password))
-					System.out.println("beat succeed!");
-				else {
-					errCount ++;
-					System.out.println("beat failed!");
-				}
-	        }     
-	    };
-		Timer timer = new Timer(true);
-		timer.schedule(task, 2000, 30000);
-		
 		// send message service
 		while(true) {
 			System.out.println("enter name message or exit: ");
 			String receiver = in.next();
 			if (receiver.equals("exit")) {
-				timer.cancel();
 				System.out.println("!!!!!!!!!!!!error count: " + errCount);
 				break;
 			}
@@ -101,8 +85,6 @@ public class ClientDemo extends Client {
 				continue;
 			}
 			if (message.equals("close")) {
-				heartbeatSession.close(false);
-				Thread.sleep(3000);
 				continue;
 			}
 			if (message.equals("init")) {

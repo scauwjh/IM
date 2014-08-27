@@ -10,6 +10,8 @@ public class Constant {
 	
 	public static final String TYPE_SEND = "sendType";
 	
+	public static final String TYPE_HEARTBEAT = "heartbeatType";
+	
 	public static final String CONTENT_TYPE_HEARTBEAT = "contentTypeHeartbeat";
 	
 	public static final String CONTENT_TYPE_MESSAGE = "contentTypeMessage";
@@ -18,15 +20,21 @@ public class Constant {
 	
 	public static final String CONTENT_TYPE_LOGIN = "contentTypeLogin";
 	
-	public static final String HEARTBEAT = "heartbeat";
-	
-	public static final String IMAGE = "image";
-	
 	public static final String DATA_LENGTH = "dataLength";
-	
-	public static final String STRING = "string";
-	
+		
 	public static final String CHARSET = "UTF-8";
+	
+	
+	public final static Integer SERVER_HEARTBEAT_INTERVAL = 60;
+	
+	public final static Integer CLIENT_HEARTBEAT_INTERVAL = 40;
+	
+	public final static Integer HEARTBEAT_TIMEOUT = 30;
+	
+	public final static String HEARTBEAT_REQUEST = "0x11";
+	
+	public final static String HEARTBEAT_RESPONSE = "0x12";
+	
 	
 	/**
 	 * connect overtime: 10s
@@ -56,8 +64,6 @@ public class Constant {
 	public static Integer TEXT_PORT = 7777;
 	
 	public static Integer IMAGE_PORT = 8888;
-	
-	public static Integer HEARTBEAT_PORT = 9999;
 	
 	public static Integer SERVER_BUFFER_SIZE = 4096;
 	

@@ -40,7 +40,6 @@ public class IMLoader implements Servlet {
 		Constant.SERVER_HOST = map.get("serverHost");
 		Constant.TEXT_PORT = Integer.valueOf(map.get("textPort"));
 		Constant.IMAGE_PORT = Integer.valueOf(map.get("imagePort"));
-		Constant.HEARTBEAT_PORT = Integer.valueOf(map.get("heartbeatPort"));
 		Constant.SERVER_BUFFER_SIZE = Integer.valueOf(map.get("bufferSize"));
 		Constant.SERVER_CACHE_SIZE = Integer.valueOf(map.get("cacheSize"));
 	}

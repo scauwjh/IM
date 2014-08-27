@@ -10,13 +10,15 @@ import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.executor.ExecutorFilter;
+import org.apache.mina.filter.keepalive.KeepAliveFilter;
 import org.apache.mina.filter.logging.LoggingFilter;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.java.mina.constant.Constant;
-import com.java.mina.core.filter.MyCharsetCodecFactory;
+import com.java.mina.core.filter.GlobalCharsetCodecFactory;
+import com.java.mina.core.filter.ServerKeepAliveMessageFactory;
 import com.java.mina.util.PropertiesUtil;
 
 public class Server {
@@ -32,20 +34,26 @@ public class Server {
 		acceptor.getFilterChain().addLast("logger", new LoggingFilter());
 		// 编码解码过滤器
 		acceptor.getFilterChain().addLast("codec", new ProtocolCodecFilter(
-				new MyCharsetCodecFactory()));
+				new GlobalCharsetCodecFactory()));
 		// 多线程处理过滤器
 		acceptor.getFilterChain().addLast("threadPool", new ExecutorFilter(
 				Executors.newCachedThreadPool()));
+		// 心跳机制过滤器
+		ServerKeepAliveMessageFactory skmf = new ServerKeepAliveMessageFactory();
+		KeepAliveFilter hbFilter = new KeepAliveFilter(skmf, IdleStatus.BOTH_IDLE);
+		hbFilter.setForwardEvent(true);
+		hbFilter.setRequestInterval(Constant.SERVER_HEARTBEAT_INTERVAL);// 用于触发服务器检测客户端是否有心跳包发过来，规定时间内没有就断开
+		hbFilter.setRequestTimeout(Constant.HEARTBEAT_TIMEOUT);
+		acceptor.getFilterChain().addLast("heartbeat", hbFilter);
+		
 		acceptor.setHandler(new ServerHandler());
 		acceptor.getSessionConfig().setReadBufferSize(Constant.SERVER_BUFFER_SIZE);
 		acceptor.getSessionConfig().setIdleTime(IdleStatus.BOTH_IDLE, 10); // 10s
 		
 		acceptor.bind(new InetSocketAddress(Constant.TEXT_PORT)); // throw an IOException
 		acceptor.bind(new InetSocketAddress(Constant.IMAGE_PORT)); // throw an IOException
-		acceptor.bind(new InetSocketAddress(Constant.HEARTBEAT_PORT)); // throw an IOException
 		System.out.println("text port " + Constant.TEXT_PORT + " is listening...");
 		System.out.println("image port " + Constant.IMAGE_PORT + " is listening...");
-		System.out.println("heartbeat port " + Constant.HEARTBEAT_PORT + " is listening...");
 	}
 	
 	public void runServer() {
@@ -73,7 +81,6 @@ public class Server {
 		Constant.SERVER_HOST = map.get("serverHost");
 		Constant.TEXT_PORT = Integer.valueOf(map.get("textPort"));
 		Constant.IMAGE_PORT = Integer.valueOf(map.get("imagePort"));
-		Constant.HEARTBEAT_PORT = Integer.valueOf(map.get("heartbeatPort"));
 		Constant.SERVER_BUFFER_SIZE = Integer.valueOf(map.get("bufferSize"));
 		Constant.SERVER_CACHE_SIZE = Integer.valueOf(map.get("cacheSize"));
 		Server server = new Server();

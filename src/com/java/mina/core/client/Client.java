@@ -4,8 +4,11 @@ import java.net.InetSocketAddress;
 import java.util.Map;
 
 import org.apache.mina.core.future.ConnectFuture;
+import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
+import org.apache.mina.filter.keepalive.KeepAliveFilter;
+import org.apache.mina.filter.keepalive.KeepAliveRequestTimeoutHandler;
 import org.apache.mina.transport.socket.SocketConnector;
 import org.apache.mina.transport.socket.nio.NioSocketConnector;
 import org.slf4j.Logger;
@@ -13,7 +16,8 @@ import org.slf4j.LoggerFactory;
 
 import com.java.mina.constant.Constant;
 import com.java.mina.core.client.vo.ClientUtil;
-import com.java.mina.core.filter.MyCharsetCodecFactory;
+import com.java.mina.core.filter.ClientKeepAliveMessageFactory;
+import com.java.mina.core.filter.GlobalCharsetCodecFactory;
 import com.java.mina.util.Debug;
 import com.java.mina.util.PropertiesUtil;
 
@@ -27,13 +31,9 @@ public class Client {
 	
 	public static IoSession imageSession;
 	
-	public static IoSession heartbeatSession;
-	
 	private ConnectFuture textFuture;
 	
 	private ConnectFuture imageFuture;
-	
-	private ConnectFuture heartbeatFuture;
 	
 	private  ClientUtil util;
 	
@@ -45,7 +45,17 @@ public class Client {
 		connector = new NioSocketConnector();
 		connector.setConnectTimeoutMillis(Constant.CONNECT_OVERTIME); // set connect timeout
 		connector.getFilterChain().addLast("codec", new ProtocolCodecFilter(
-				new MyCharsetCodecFactory())); // add charset filter
+				new GlobalCharsetCodecFactory())); // add charset filter
+		
+		// add heart beat filter
+		ClientKeepAliveMessageFactory ckamf = new ClientKeepAliveMessageFactory();
+		KeepAliveFilter hbFilter = new KeepAliveFilter(ckamf, IdleStatus.READER_IDLE,
+				KeepAliveRequestTimeoutHandler.CLOSE); 
+		hbFilter.setForwardEvent(true);
+		hbFilter.setRequestInterval(Constant.CLIENT_HEARTBEAT_INTERVAL);
+		hbFilter.setRequestTimeout(Constant.HEARTBEAT_TIMEOUT);
+		connector.getFilterChain().addLast("heartbeat", hbFilter);
+		
 		connector.getSessionConfig().setUseReadOperation(true); // set use read operation
 		connector.setHandler(new ClientHandler() {
 			@Override
@@ -74,16 +84,9 @@ public class Client {
 		imageFuture.awaitUninterruptibly();
 		imageSession = imageFuture.getSession();
 		
-		// connect to heartbeat port
-		heartbeatFuture = connector.connect(new InetSocketAddress(
-				Constant.SERVER_HOST, Constant.HEARTBEAT_PORT));
-		heartbeatFuture.awaitUninterruptibly();
-		heartbeatSession = heartbeatFuture.getSession();
-		
 		Debug.println("connect to remote host: " + Constant.SERVER_HOST);
 		Debug.println("text port: " + Constant.TEXT_PORT);
 		Debug.println("image port: " + Constant.IMAGE_PORT);
-		Debug.println("heartbeat port: " + Constant.HEARTBEAT_PORT);
 		
 		// im api init
 		util = new ClientUtil();
@@ -99,7 +102,6 @@ public class Client {
 		Constant.SERVER_HOST = map.get("serverHost");
 		Constant.TEXT_PORT = Integer.valueOf(map.get("textPort"));
 		Constant.IMAGE_PORT = Integer.valueOf(map.get("imagePort"));
-		Constant.HEARTBEAT_PORT = Integer.valueOf(map.get("heartbeatPort"));
 		Constant.SERVER_BUFFER_SIZE = Integer.valueOf(map.get("bufferSize"));
 		Constant.SERVER_CACHE_SIZE = Integer.valueOf(map.get("cacheSize"));
 	}
@@ -112,12 +114,9 @@ public class Client {
 	 * @return
 	 */
 	public Boolean login(String user, String password) {
-		if (!this.login(textSession, user, password)) {
+		if (!this.login(textSession, user, password))
 			return false;
-		} else if (!this.login(imageSession, user, password)) {
-			return false;
-		}
-		return this.login(heartbeatSession, user, password);
+		return this.login(imageSession, user, password);
 	}
 	
 	/**
@@ -144,17 +143,6 @@ public class Client {
 			String accessToken, String params, String message) {
 		return util.sendMessage(textSession, sender, receiver, 
 				accessToken, params, message);
-	}
-	
-	/**
-	 * send heartbeat
-	 * @param account
-	 * @param accessToken
-	 * @return
-	 */
-	public Boolean sendHeartbeat(String account, String accessToken) {
-		return util.sendHeartbeat(heartbeatSession, account,
-				null, accessToken);
 	}
 	
 	/**
