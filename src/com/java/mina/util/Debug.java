@@ -1,22 +1,27 @@
 package com.java.mina.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.java.mina.constant.Constant;
+
 public class Debug {
 	
-	private final static Boolean IS_DEBUG = true;
+	public static final Logger logger = LoggerFactory.getLogger(Debug.class);
 	
 	public static void println(Object value) {
-		if (IS_DEBUG)
+		if (Constant.IS_DEBUG) {
 			System.out.println("---------- " + value + " ----------");
-	}
-	
-	public static void print(Object value) {
-		if (IS_DEBUG)
-			System.out.print("---------- " + value);
+		} else {
+			logger.debug(value + "");
+		}
+			
 	}
 	
 	public static void printStackTrace(Object e) {
 		Exception exception = (Exception) e;
-		if (IS_DEBUG)
+		if (Constant.IS_DEBUG) {
 			exception.printStackTrace();
+		}
 	}
 }

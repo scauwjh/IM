@@ -1,6 +1,7 @@
 package com.java.mina.load;
 
 import java.io.FileOutputStream;
+import java.util.Map;
 import java.util.Scanner;
 
 import org.apache.mina.core.session.IoSession;
@@ -8,6 +9,7 @@ import org.apache.mina.core.session.IoSession;
 import com.java.mina.constant.Constant;
 import com.java.mina.core.client.Client;
 import com.java.mina.core.model.DataPacket;
+import com.java.mina.util.PropertiesUtil;
 import com.java.mina.util.StringUtil;
 
 public class ClientDemo extends Client {
@@ -20,6 +22,21 @@ public class ClientDemo extends Client {
 	
 	public static ClientDemo client;
 	
+	
+	/**
+	 * 获取配置
+	 */
+	static {
+		String path = Client.class.getResource("/").getPath() 
+				+ "imconfigure.properties";
+		Map<String, String> map = PropertiesUtil.getProperties(path);
+		Constant.SERVER_HOST = map.get("serverHost");
+		Constant.TEXT_PORT = Integer.valueOf(map.get("textPort"));
+		Constant.IMAGE_PORT = Integer.valueOf(map.get("imagePort"));
+		Constant.SERVER_BUFFER_SIZE = Integer.valueOf(map.get("bufferSize"));
+		Constant.SERVER_CACHE_SIZE = Integer.valueOf(map.get("cacheSize"));
+		Constant.IS_DEBUG = map.get("isDebug").equals("true");
+	}
 	
 	/**
 	 * 重写数据接收的方法

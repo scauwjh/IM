@@ -68,4 +68,6 @@ public class Constant {
 	public static Integer SERVER_BUFFER_SIZE = 4096;
 	
 	public static Integer SERVER_CACHE_SIZE = 100000;
+	
+	public static Boolean IS_DEBUG = true;
 }

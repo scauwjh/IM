@@ -83,6 +83,7 @@ public class Server {
 		Constant.IMAGE_PORT = Integer.valueOf(map.get("imagePort"));
 		Constant.SERVER_BUFFER_SIZE = Integer.valueOf(map.get("bufferSize"));
 		Constant.SERVER_CACHE_SIZE = Integer.valueOf(map.get("cacheSize"));
+		Constant.IS_DEBUG = map.get("isDebug").equals("true");
 		Server server = new Server();
 		server.runServer();
 	}

@@ -1,7 +1,6 @@
 package com.java.mina.core.client;
 
 import java.net.InetSocketAddress;
-import java.util.Map;
 
 import org.apache.mina.core.future.ConnectFuture;
 import org.apache.mina.core.session.IdleStatus;
@@ -19,7 +18,6 @@ import com.java.mina.core.client.vo.ClientUtil;
 import com.java.mina.core.filter.ClientKeepAliveMessageFactory;
 import com.java.mina.core.filter.GlobalCharsetCodecFactory;
 import com.java.mina.util.Debug;
-import com.java.mina.util.PropertiesUtil;
 
 public class Client {
 	
@@ -38,9 +36,7 @@ public class Client {
 	private  ClientUtil util;
 	
 	
-	public Client() { 
-		// load configure
-		loadProperties();
+	public Client() {
 		// init connector
 		connector = new NioSocketConnector();
 		connector.setConnectTimeoutMillis(Constant.CONNECT_OVERTIME); // set connect timeout
@@ -90,20 +86,6 @@ public class Client {
 		
 		// im api init
 		util = new ClientUtil();
-	}
-	
-	/**
-	 * 获取配置
-	 */
-	private void loadProperties() {
-		String path = this.getClass().getResource("/").getPath() 
-				+ "/imconfigure.properties";
-		Map<String, String> map = PropertiesUtil.getProperties(path);
-		Constant.SERVER_HOST = map.get("serverHost");
-		Constant.TEXT_PORT = Integer.valueOf(map.get("textPort"));
-		Constant.IMAGE_PORT = Integer.valueOf(map.get("imagePort"));
-		Constant.SERVER_BUFFER_SIZE = Integer.valueOf(map.get("bufferSize"));
-		Constant.SERVER_CACHE_SIZE = Integer.valueOf(map.get("cacheSize"));
 	}
 	
 	/**

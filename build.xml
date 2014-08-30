@@ -1,65 +1,64 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- WARNING: Eclipse auto-generated file.
-              Any modifications will be overwritten.
-              To include a user specific buildfile here, simply create one in the same
-              directory with the processing instruction <?eclipse.ant.import?>
-              as the first entry and export the buildfile again. --><project basedir="." default="build" name="JavaMINA">
-    <property environment="env"/>
-    <property name="ECLIPSE_HOME" value="../../../../Program Files/eclipse"/>
-    <property name="debuglevel" value="source,lines,vars"/>
-    <property name="target" value="1.7"/>
-    <property name="source" value="1.7"/>
-    <path id="JavaMINA.classpath">
-        <pathelement location="bin"/>
-        <pathelement location="lib/slf4j-api-1.7.7.jar"/>
-        <pathelement location="lib/slf4j-jdk14-1.7.7.jar"/>
-        <pathelement location="lib/apache-mina-2.0.7-src.jar"/>
-        <pathelement location="lib/mina-core-2.0.7.jar"/>
+<project default="create_run_jar" name="Create Runnable Jar for Project JavaMINA">
+    <property name="classes.dir" value="bin/classes"/>
+    <property name="run.dir" value="bin/run"/>
+    <property name="src.dir" value="src"/>
+    <property name="lib.dir" value="lib"/>
+    <property name="conf.dir" value="conf"/>
+    <property name="server.main" value="com.java.mina.load.ClientDemo"/>
+    <!-- locale jar packages -->
+    <path id="lib-classpath">
+        <fileset dir="${lib.dir}">
+            <include name="**/*.jar"/>
+        </fileset>
     </path>
-    <target name="init">
-        <mkdir dir="bin"/>
-        <copy includeemptydirs="false" todir="bin">
-            <fileset dir="src">
-                <exclude name="**/*.launch"/>
-                <exclude name="**/*.java"/>
+    <!-- clean -->
+    <target name="clean">
+        <delete dir="${run.dir}"/>
+    </target>
+    <!-- init -->
+    <target name="init" depends="clean">
+        <mkdir dir="${run.dir}"/>
+        <mkdir dir="${classes.dir}"/>
+    </target>
+    <!-- compile -->
+    <target name="compile" depends="init">
+        <javac srcdir="${src.dir}" destdir="${classes.dir}">
+            <compilerarg line="-encoding UTF-8"/>
+            <classpath refid="lib-classpath"/>
+        </javac>
+        <copy todir="${run.dir}">
+            <fileset dir="${conf.dir}">
+                <include name="**/*.properties" />
+                <include name="**/*.xml" />
+                <include name="**/*.xsl" />
             </fileset>
         </copy>
     </target>
-    <target name="clean">
-        <delete dir="bin"/>
-    </target>
-    <target depends="clean" name="cleanall"/>
-    <target depends="build-subprojects,build-project" name="build"/>
-    <target name="build-subprojects"/>
-    <target depends="init" name="build-project">
-        <echo message="${ant.project.name}: ${ant.file}"/>
-        <javac debug="true" debuglevel="${debuglevel}" destdir="bin" includeantruntime="false" source="${source}" target="${target}">
-            <src path="src"/>
-            <classpath refid="JavaMINA.classpath"/>
-        </javac>
-    </target>
-    <target description="Build all projects which reference this project. Useful to propagate changes." name="build-refprojects"/>
-    <target description="copy Eclipse compiler jars to ant lib directory" name="init-eclipse-compiler">
-        <copy todir="${ant.library.dir}">
-            <fileset dir="${ECLIPSE_HOME}/plugins" includes="org.eclipse.jdt.core_*.jar"/>
-        </copy>
-        <unzip dest="${ant.library.dir}">
-            <patternset includes="jdtCompilerAdapter.jar"/>
-            <fileset dir="${ECLIPSE_HOME}/plugins" includes="org.eclipse.jdt.core_*.jar"/>
-        </unzip>
-    </target>
-    <target description="compile project with Eclipse compiler" name="build-eclipse-compiler">
-        <property name="build.compiler" value="org.eclipse.jdt.core.JDTCompilerAdapter"/>
-        <antcall target="build"/>
-    </target>
-    <target name="Server (2)">
-        <java classname="com.java.mina.core.server.Server" failonerror="true" fork="yes">
-            <classpath refid="JavaMINA.classpath"/>
-        </java>
-    </target>
-    <target name="ClientDemo (2)">
-        <java classname="com.java.mina.demo.ClientDemo" failonerror="true" fork="yes">
-            <classpath refid="JavaMINA.classpath"/>
-        </java>
+    <!-- package -->
+    <target name="create_run_jar" depends="compile">
+        <jar destfile="${run.dir}/client.jar" filesetmanifest="mergewithoutmain">           
+            <manifest>
+                <attribute name="Main-Class" value="${server.main}"/>
+                <attribute name="Class-Path" value="."/>
+            </manifest>
+
+            <fileset dir="${classes.dir}"/>
+
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/apache-mina-2.0.7-src.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/mina-core-2.0.7.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/json-lib-2.2.3-jdk15.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/commons-beanutils-1.7.0.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/commons-collections-3.2.1.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/commons-collections4-4.0-alpha1.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/commons-io-1.3.2.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/commons-lang-2.3.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/commons-logging-1.1.1.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/commons-logging-1.1.3.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/ezmorph-1.0.3.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/log4j-1.2.17.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/slf4j-api-1.7.7.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/slf4j-log4j12-1.7.7.jar"/>
+        </jar>
     </target>
 </project>
