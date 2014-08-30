@@ -5,8 +5,6 @@ import java.io.UnsupportedEncodingException;
 import com.java.im.constant.Constant;
 import com.java.im.util.Debug;
 
-import net.sf.json.JSONObject;
-
 public class BytePacket {
 	
 	private byte[] header;
@@ -74,20 +72,20 @@ public class BytePacket {
 		}
 	}
 	
-	public static void main(String[] args) {
-		DataPacket decode = new DataPacket();
-		decode.setType("type");
-		decode.setSender("sender");
-		decode.setReceiver("receiver");
-		decode.setAccessToken("token");
-		decode.setStatus("status");
-		decode.setContentType("content-type");
-		decode.setTimeStamp("timeStamp");
-		decode.setParameters("params");
-		decode.setBody(null);
-		BytePacket encode = decode.toBytePacket();
-		decode = encode.toDataPacket();
-		JSONObject json = JSONObject.fromObject(decode);
-		System.out.println(json);
-	}
+//	public static void main(String[] args) {
+//		DataPacket decode = new DataPacket();
+//		decode.setType("type");
+//		decode.setSender("sender");
+//		decode.setReceiver("receiver");
+//		decode.setAccessToken("token");
+//		decode.setStatus("status");
+//		decode.setContentType("content-type");
+//		decode.setTimeStamp("timeStamp");
+//		decode.setParameters("params");
+//		decode.setBody(null);
+//		BytePacket encode = decode.toBytePacket();
+//		decode = encode.toDataPacket();
+//		JSONObject json = JSONObject.fromObject(decode);
+//		System.out.println(json);
+//	}
 }
