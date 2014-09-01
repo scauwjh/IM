@@ -41,11 +41,12 @@ public class ServerHandler extends IoHandlerAdapter {
 			String sender = packet.getSender();
 			String receiver = packet.getReceiver();
 			String token = packet.getAccessToken();
-			String contentType = packet.getContentType();
 			String address = ((InetSocketAddress) session.getRemoteAddress()).getHostName();
 			// login
 			if (type.equals(Constant.TYPE_LOGIN)) {
 				Login login = new Login();
+				packet.setSender("&server&");
+				packet.setReceiver(sender);
 				if (!login.login(sender, token, address)) {
 					packet.setStatus("0");
 					session.write(packet);
@@ -91,16 +92,12 @@ public class ServerHandler extends IoHandlerAdapter {
 				packet.setStatus("0");
 				packet.setBody(body.getBytes(Constant.CHARSET));
 				session.write(packet);
-				closeSession(session);
+				session.close(false);
 				return;
 			}
 			
 			if (type.equals(Constant.TYPE_SEND)) {
 				// get the session of receiver
-				if (contentType.equals(Constant.CONTENT_TYPE_HEARTBEAT)) {
-					Debug.println("Heartbeat received from: " + session.getRemoteAddress());
-					return;
-				}
 				String sendTo = receiver + AddressUtil.getLocalPort(session);
 				IoSession sendSess = GlobalResource.sessionMap.get(sendTo);
 				if (sendSess != null && sendSess.getRemoteAddress() != null) {
@@ -127,15 +124,10 @@ public class ServerHandler extends IoHandlerAdapter {
 	}
 	
 	@Override
-	public void sessionIdle(IoSession session, IdleStatus status) 
-			throws Exception {
-		
-	}
-	
-	@Override
 	public void sessionCreated(IoSession session) 
 			throws Exception {
-		logger.info("session created: " + GlobalResource.getSessionCount(1));
+		logger.info("Session created: " + GlobalResource.getSessionCount(1));
+		session.setAttribute(Constant.IS_SESSION_CLOSE, false);
 		SocketSessionConfig cfg = (SocketSessionConfig) session.getConfig();
         cfg.setReceiveBufferSize(Constant.SERVER_BUFFER_SIZE);
         cfg.setReadBufferSize(Constant.SERVER_BUFFER_SIZE);
@@ -146,28 +138,47 @@ public class ServerHandler extends IoHandlerAdapter {
 	@Override
 	public void sessionClosed(IoSession session)
 			throws Exception {
-		logger.info("session closed: " + session.getLocalAddress() 
-				+ " session count: " + GlobalResource.getSessionCount(-1));
-		String sessionAccount = (String) session.getAttribute(Constant.SESSION_ACCOUNT);
-		String account = (String) session.getAttribute(Constant.ACCOUNT);
-		GlobalResource.sessionMap.remove(sessionAccount);
-		if (account == null) return;
-		if (!GlobalResource.sessionMap.containsKey(account + Constant.TEXT_PORT) &&
-				!GlobalResource.sessionMap.containsKey(account + Constant.IMAGE_PORT)) {
-			logger.info("user " + account + " is logout");
-			GlobalResource.userMap.remove(account);
+		Boolean isClose = (Boolean) session.getAttribute(Constant.IS_SESSION_CLOSE);
+		if (!isClose) {
+			logger.info("Session closed: " + session.getRemoteAddress());
+			userLogout(session);
 		}
 	}
 	
 	@Override
 	public void exceptionCaught(IoSession session, Throwable cause) 
 			throws Exception {
-		logger.error("Exception catch from " + session.getRemoteAddress() 
-				+ ": " + cause.getLocalizedMessage());
+		Boolean isClose = (Boolean) session.getAttribute(Constant.IS_SESSION_CLOSE);
+		if (!isClose) {
+			logger.warn("Session closed by exception: " + cause.getMessage());
+			userLogout(session);
+		} else {
+			logger.warn("Exception caught: " + cause.getMessage());
+		}
 	}
 	
-	private void closeSession(IoSession session) {
+	@Override
+    public void sessionIdle(IoSession session, IdleStatus status)
+            throws Exception {
+		logger.info("Session overtime! close session : " + session.getRemoteAddress());
 		session.close(false);
+    }
+	
+	
+	
+	
+	private void userLogout(IoSession session) {
+		session.setAttribute(Constant.IS_SESSION_CLOSE, true);
+		logger.info("Session count is: " + GlobalResource.getSessionCount(-1));
+		String sessionAccount = (String) session.getAttribute(Constant.SESSION_ACCOUNT);
+		String account = (String) session.getAttribute(Constant.ACCOUNT);
+		GlobalResource.sessionMap.remove(sessionAccount);
+		if (account == null) return;
+		if (!GlobalResource.sessionMap.containsKey(account + Constant.TEXT_PORT) &&
+				!GlobalResource.sessionMap.containsKey(account + Constant.IMAGE_PORT)) {
+			logger.info("User " + account + " is logout");
+			GlobalResource.userMap.remove(account);
+		}
 	}
 	
 }

@@ -18,7 +18,7 @@ public class ClientDemo extends Client {
 	
 	public static String account;
 	
-	public static String password;
+	public static String accessToken;
 	
 	public static ClientDemo client;
 	
@@ -70,7 +70,19 @@ public class ClientDemo extends Client {
 	@Override
 	public void closeSession(IoSession session) {
 		System.out.println("!!!!!session is closed!!!!");
-		client.login(session, account, password);
+		int count = 0;
+		while (true) {
+			try {
+				Thread.sleep(3000L);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			if (client.login(session, account, accessToken)) {
+				break;
+			}
+			System.out.println("login again: " + ++count);
+		}
 	}
 	
 	
@@ -79,9 +91,9 @@ public class ClientDemo extends Client {
 		Scanner in = new Scanner(System.in);
 		System.out.println("enter a name for user: ");
 		account = in.next();
-		password = "123456";
+		accessToken = "123456";
 		// login
-		if (!client.login(account, password)) {
+		if (!client.login(account, accessToken)) {
 			System.out.println("login failed!");
 			in.close();
 			return;
@@ -99,17 +111,17 @@ public class ClientDemo extends Client {
 			if (message.equals("image")) {
 				String path = "C:\\Users\\asus\\Desktop\\tmp\\123.png";
 				// use multiple thread to finish the service
-				client.sendImage(account, receiver, password, "params", path);
+				client.sendImage(account, receiver, accessToken, "params", path);
 				continue;
 			}
 			if (message.equals("close")) {
 				continue;
 			}
 			if (message.equals("init")) {
-				client.login(account, password);
+				client.login(account, accessToken);
 				continue;
 			}
-			client.sendMessage(account, receiver, password, "params", message);
+			client.sendMessage(account, receiver, accessToken, "params", message);
 		}
 		in.close();
 	}

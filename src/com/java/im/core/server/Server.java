@@ -44,7 +44,9 @@ public class Server {
 	}
 	
 	public void server() throws IOException {
-		acceptor = new NioSocketAcceptor();
+		acceptor = new NioSocketAcceptor(Runtime.getRuntime().availableProcessors());
+		acceptor.getSessionConfig().setReadBufferSize(Constant.SERVER_BUFFER_SIZE);
+		acceptor.getSessionConfig().setIdleTime(IdleStatus.BOTH_IDLE, 30);
 		// 日志过滤器
 		acceptor.getFilterChain().addLast("logger", new LoggingFilter());
 		// 编码解码过滤器
@@ -55,15 +57,13 @@ public class Server {
 				Executors.newCachedThreadPool()));
 		// 心跳机制过滤器
 		ServerKeepAliveMessageFactory skmf = new ServerKeepAliveMessageFactory();
-		KeepAliveFilter hbFilter = new KeepAliveFilter(skmf, IdleStatus.BOTH_IDLE);
+		HeartbeatHandler hbHandler = new HeartbeatHandler();
+		KeepAliveFilter hbFilter = new KeepAliveFilter(skmf, IdleStatus.BOTH_IDLE, hbHandler);
 		hbFilter.setForwardEvent(true);
 		hbFilter.setRequestInterval(Constant.SERVER_HEARTBEAT_INTERVAL);// 用于触发服务器检测客户端是否有心跳包发过来，规定时间内没有就断开
-		hbFilter.setRequestTimeout(Constant.HEARTBEAT_TIMEOUT);
 		acceptor.getFilterChain().addLast("heartbeat", hbFilter);
 		
 		acceptor.setHandler(new ServerHandler());
-		acceptor.getSessionConfig().setReadBufferSize(Constant.SERVER_BUFFER_SIZE);
-		acceptor.getSessionConfig().setIdleTime(IdleStatus.BOTH_IDLE, 10); // 10s
 		
 		acceptor.bind(new InetSocketAddress(Constant.TEXT_PORT)); // throw an IOException
 		acceptor.bind(new InetSocketAddress(Constant.IMAGE_PORT)); // throw an IOException

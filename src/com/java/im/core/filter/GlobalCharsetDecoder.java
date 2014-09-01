@@ -7,7 +7,9 @@ import org.apache.mina.filter.codec.ProtocolDecoderOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.java.im.constant.Constant;
 import com.java.im.core.model.BytePacket;
+import com.java.im.core.model.DataPacket;
 import com.java.im.util.Debug;
 
 public class GlobalCharsetDecoder extends CumulativeProtocolDecoder {
@@ -26,28 +28,35 @@ public class GlobalCharsetDecoder extends CumulativeProtocolDecoder {
 		try {
 			// get header
 			length = in.getInt();
-			if (length > in.remaining()) {
-				logger.info("Data may not enough in decoder");
-				in.reset();
-				return false;
+			if (length == -1) {
+				DataPacket data = new DataPacket();
+				data.setType(Constant.TYPE_HEARTBEAT);
+				out.write(data);
+			} else {
+				if (length > in.remaining()) {
+					logger.info("Data may not enough in decoder");
+					in.reset();
+					return false;
+				}
+				header = new byte[length];
+				in.get(header, 0, length);
+				encode.setHeader(header);
+				// get body
+				length = in.getInt();
+				if (length > 0 && length > in.remaining()) {
+					logger.info("Data may not enough in decoder");
+					in.reset();
+					return false;
+				}
+				if (length > 0) {
+					body = new byte[length];
+					in.get(body, 0, length);
+					encode.setBody(body);
+				}
+				// write object
+				
+				out.write(encode.toDataPacket());
 			}
-			header = new byte[length];
-			in.get(header, 0, length);
-			encode.setHeader(header);
-			// get body
-			length = in.getInt();
-			if (length > 0 && length > in.remaining()) {
-				logger.info("Data may not enough in decoder");
-				in.reset();
-				return false;
-			}
-			if (length > 0) {
-				body = new byte[length];
-				in.get(body, 0, length);
-				encode.setBody(body);
-			}
-			// write object
-			out.write(encode.toDataPacket());
 			// if remaining
 			if (in.remaining() > 0) {
 				Debug.println("Buffer is remaining");

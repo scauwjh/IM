@@ -1,7 +1,5 @@
 package com.java.im.core.filter;
 
-import java.util.Date;
-
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.keepalive.KeepAliveMessageFactory;
 import org.slf4j.Logger;
@@ -30,7 +28,6 @@ public class ClientKeepAliveMessageFactory implements KeepAliveMessageFactory {
 	public Object getRequest(IoSession session) {
 		DataPacket hb = new DataPacket();
 		hb.setType(Constant.TYPE_HEARTBEAT);
-		hb.setTimeStamp(new Date().toString());
 		return hb;
 	}
 
