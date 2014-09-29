@@ -110,7 +110,7 @@ public class Client {
 	}
 
 	/**
-	 * login
+	 * init login
 	 * @param user
 	 * @param accessToken
 	 * @return
@@ -122,7 +122,8 @@ public class Client {
 	}
 	
 	/**
-	 * login
+	 * login again
+	 * @param session
 	 * @param user
 	 * @param accessToken
 	 * @return
@@ -131,7 +132,7 @@ public class Client {
 		if (!util.login(session, user, accessToken)) {
 			Integer port = (Integer) session.getAttribute(Constant.SESSION_PORT);
 			Client.connect(port);
-			return login(user, accessToken);
+			return util.login(session, user, accessToken);
 		}
 		return true;
 	}

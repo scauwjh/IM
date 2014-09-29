@@ -45,7 +45,7 @@ public class ServerHandler extends IoHandlerAdapter {
 			// login
 			if (type.equals(Constant.TYPE_LOGIN)) {
 				Login login = new Login();
-				packet.setSender("&server&");
+				packet.setSender("server\n");
 				packet.setReceiver(sender);
 				if (!login.login(sender, token, address)) {
 					packet.setStatus("0");

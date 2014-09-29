@@ -28,6 +28,7 @@ public class GlobalCharsetDecoder extends CumulativeProtocolDecoder {
 		try {
 			// get header
 			length = in.getInt();
+			Debug.println("header length:" + length);
 			if (length == -1) {
 				DataPacket data = new DataPacket();
 				data.setType(Constant.TYPE_HEARTBEAT);

@@ -2,10 +2,16 @@ package com.java.im.running;
 
 import com.java.im.core.server.Server;
 
-public class ServerDemo {
+public class ServerDemo extends Thread{
 	
-	public static void main(String[] args) {
+	@Override
+	public void run() {
 		Server server = new Server();
 		server.startServer();
+	}
+		
+	public static void main(String[] args) {
+		ServerDemo run = new ServerDemo();
+		run.start();
 	}
 }

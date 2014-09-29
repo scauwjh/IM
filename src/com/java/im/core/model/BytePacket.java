@@ -5,6 +5,11 @@ import java.io.UnsupportedEncodingException;
 import com.java.im.constant.Constant;
 import com.java.im.util.Debug;
 
+/**
+ * <b>数据包</b>
+ * @author wjh
+ * @version 2014-09-27
+ */
 public class BytePacket {
 	
 	private byte[] header;
@@ -27,6 +32,10 @@ public class BytePacket {
 		this.header = header;
 	}
 	
+	/**
+	 * <b>字节包解析，转数据包</b>
+	 * @return DatePacket or null
+	 */
 	public DataPacket toDataPacket() {
 		try {
 			String header = new String(this.header, Constant.CHARSET);
@@ -72,20 +81,22 @@ public class BytePacket {
 		}
 	}
 	
-//	public static void main(String[] args) {
-//		DataPacket decode = new DataPacket();
-//		decode.setType("type");
-//		decode.setSender("sender");
-//		decode.setReceiver("receiver");
-//		decode.setAccessToken("token");
-//		decode.setStatus("status");
-//		decode.setContentType("content-type");
-//		decode.setTimeStamp("timeStamp");
-//		decode.setParameters("params");
-//		decode.setBody(null);
-//		BytePacket encode = decode.toBytePacket();
-//		decode = encode.toDataPacket();
-//		JSONObject json = JSONObject.fromObject(decode);
-//		System.out.println(json);
-//	}
+	/*
+	public static void main(String[] args) {
+		DataPacket decode = new DataPacket();
+		decode.setType("type");
+		decode.setSender("sender");
+		decode.setReceiver("receiver");
+		decode.setAccessToken("token");
+		decode.setStatus("status");
+		decode.setContentType("content-type");
+		decode.setTimeStamp("timeStamp");
+		decode.setParameters("params");
+		decode.setBody(null);
+		BytePacket encode = decode.toBytePacket();
+		decode = encode.toDataPacket();
+		JSONObject json = JSONObject.fromObject(decode);
+		System.out.println(json);
+	}
+	*/
 }
