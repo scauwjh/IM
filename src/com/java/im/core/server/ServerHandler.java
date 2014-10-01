@@ -182,6 +182,7 @@ public class ServerHandler extends IoHandlerAdapter {
 		if (!user.ifLogin()) {
 			GlobalResource.userMap.remove(account);
 			logger.info(account + " is logout!");
+			Debug.println("online count: " + GlobalResource.userMap.size());
 		}
 	}
 	
