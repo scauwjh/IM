@@ -108,6 +108,11 @@ public class Client {
 			imageSession.setAttribute(Constant.SESSION_PORT, Constant.IMAGE_PORT);
 		}
 	}
+	
+	public void close() {
+		connector.dispose();
+		connector = null;
+	}
 
 	/**
 	 * init login

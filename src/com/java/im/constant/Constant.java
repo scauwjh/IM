@@ -12,8 +12,6 @@ public class Constant {
 	
 	public static final String TYPE_HEARTBEAT = "heartbeatType";
 	
-	public static final String 	IS_SESSION_CLOSE = "isSessionClose";
-	
 	public static final String SESSION_PORT = "sessionPort";
 	
 	public static final String CONTENT_TYPE_HEARTBEAT = "contentTypeHeartbeat";

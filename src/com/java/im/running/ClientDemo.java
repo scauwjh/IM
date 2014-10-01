@@ -98,6 +98,7 @@ public class ClientDemo extends Client {
 		if (!client.login(account, accessToken)) {
 			System.out.println("login failed!");
 			in.close();
+			client.close();
 			return;
 		}
 		

@@ -31,11 +31,4 @@ public class GlobalResource {
 	
 	public static HashMap<String, User> userMap = new HashMap<String, User>();
 	
-	private static Integer sessionCount = 0;
-	
-	public synchronized static Integer getSessionCount(Integer add) {
-		sessionCount += add;
-		return sessionCount;
-	}
-	
 }

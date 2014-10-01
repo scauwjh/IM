@@ -136,8 +136,7 @@ public class ServerHandler extends IoHandlerAdapter {
 	@Override
 	public void sessionCreated(IoSession session) 
 			throws Exception {
-		logger.info("Session created: " + GlobalResource.getSessionCount(1));
-		session.setAttribute(Constant.IS_SESSION_CLOSE, false);
+		logger.info("Session created!" + session.getRemoteAddress());
 		SocketSessionConfig cfg = (SocketSessionConfig) session.getConfig();
         cfg.setReceiveBufferSize(Constant.SERVER_BUFFER_SIZE);
         cfg.setReadBufferSize(Constant.SERVER_BUFFER_SIZE);
@@ -156,6 +155,11 @@ public class ServerHandler extends IoHandlerAdapter {
 	public void exceptionCaught(IoSession session, Throwable cause) 
 			throws Exception {
 		logger.warn("Session closed by exception: " + cause.getMessage());
+		try {
+			session.close(true);
+		} catch(Exception e) {
+			logger.warn("session had close!");
+		}
 		removeSession(session);
 	}
 	
@@ -175,9 +179,7 @@ public class ServerHandler extends IoHandlerAdapter {
 		String account = (String) session.getAttribute(Constant.ACCOUNT);
 		User user = GlobalResource.userMap.get(account);
 		if (user == null) return;
-		Boolean flag = user.setIoSession(AddressUtil.getLocalPort(session), null);
-		if (flag)
-			logger.info("Session count is: " + GlobalResource.getSessionCount(-1));
+		user.setIoSession(AddressUtil.getLocalPort(session), null);
 		// if not login remove user from userMap
 		if (!user.ifLogin()) {
 			GlobalResource.userMap.remove(account);

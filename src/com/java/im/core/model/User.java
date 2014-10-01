@@ -54,11 +54,6 @@ public class User {
 		return !((textSession == null) && (mediaSession == null));
 	}
 
-	public void logout(boolean immediately) {
-		this.textSession.close(immediately);
-		this.mediaSession.close(immediately);
-	}
-
 	public IoSession getTextSession() {
 		return textSession;
 	}
