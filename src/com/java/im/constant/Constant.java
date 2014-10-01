@@ -28,6 +28,8 @@ public class Constant {
 	
 	public static final String CHARSET = "UTF-8";
 	
+	public static final String SERVER_NAME = "#UFRIEND_SERVER#";
+	
 	/**
 	 * server heart beat timeout 240s
 	 */

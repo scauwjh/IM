@@ -45,6 +45,8 @@ public class ClientDemo extends Client {
 	public void messageHandler(Object message) {
 		try {
 			DataPacket packet = (DataPacket) message;
+			if (!packet.getType().equals(Constant.TYPE_SEND))
+				return;
 			System.out.println("message received form: " + packet.getSender());
 			System.out.println("message status: " + packet.getStatus());
 			System.out.println("Content type: " + packet.getContentType());

@@ -3,10 +3,10 @@ package com.java.im.constant;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.java.im.core.model.User;
 import com.java.im.core.service.OfflineMessage;
 import com.java.im.util.lrucache.LRUCache;
 import com.java.im.util.lrucache.LRUEntry;
@@ -29,11 +29,9 @@ public class GlobalResource {
 		}
 	};
 	
-	public static HashMap<String, IoSession> sessionMap = new HashMap<String, IoSession>();
+	public static HashMap<String, User> userMap = new HashMap<String, User>();
 	
-	public static HashMap<String, Object> userMap = new HashMap<String, Object>();
-	
-	public static Integer sessionCount = 0;
+	private static Integer sessionCount = 0;
 	
 	public synchronized static Integer getSessionCount(Integer add) {
 		sessionCount += add;

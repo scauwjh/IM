@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.java.im.constant.Constant;
 import com.java.im.constant.GlobalResource;
 import com.java.im.core.model.DataPacket;
+import com.java.im.core.model.User;
 import com.java.im.core.service.Login;
 import com.java.im.core.service.OfflineMessage;
 import com.java.im.util.AddressUtil;
@@ -45,23 +46,27 @@ public class ServerHandler extends IoHandlerAdapter {
 			// login
 			if (type.equals(Constant.TYPE_LOGIN)) {
 				Login login = new Login();
-				packet.setSender("server\n");
+				packet.setSender(Constant.SERVER_NAME);
 				packet.setReceiver(sender);
 				if (!login.login(sender, token, address)) {
+					Debug.println("login failed");
 					packet.setStatus("0");
 					session.write(packet);
 					return;
 				}
 				
 				// register the login status
-				// session set account
-				GlobalResource.userMap.put(sender, session);
+				// get login user
+				User user = GlobalResource.userMap.get(sender);
+				if (user == null) {
+					user = new User(sender);
+				}
+				// set attribute: account
 				session.setAttribute(Constant.ACCOUNT, sender);
-				// session set session_account
-				String sessionAccount = sender + AddressUtil.getLocalPort(session);
-				session.setAttribute(Constant.SESSION_ACCOUNT, sessionAccount);
-				// add session to map
-				GlobalResource.sessionMap.put(sessionAccount, session);
+				Integer port = AddressUtil.getLocalPort(session);
+				user.setIoSession(port, session);
+				GlobalResource.userMap.put(sender, user);
+				// return packet
 				packet.setStatus("1");
 				session.write(packet);
 				
@@ -98,15 +103,20 @@ public class ServerHandler extends IoHandlerAdapter {
 			
 			if (type.equals(Constant.TYPE_SEND)) {
 				// get the session of receiver
-				String sendTo = receiver + AddressUtil.getLocalPort(session);
-				IoSession sendSess = GlobalResource.sessionMap.get(sendTo);
+				Integer toPort = AddressUtil.getLocalPort(session);
+				User toUser = GlobalResource.userMap.get(receiver);
+				IoSession sendSess = null;
+				if (toUser != null) {
+					sendSess = toUser.getIoSession(toPort);
+				}
 				if (sendSess != null && sendSess.getRemoteAddress() != null) {
 					Debug.println("message will send to: " + receiver);
 					sendSess.write(packet);// send message
 				}
 				else {
-					if (sendSess != null)
-						GlobalResource.sessionMap.remove(sendTo);
+					if (sendSess != null) {
+						// remove user?
+					}
 					// not online
 					Debug.println("receiver " + receiver + " not online");
 					List<Object> list = GlobalResource.messageQueue.get(receiver);
@@ -138,23 +148,15 @@ public class ServerHandler extends IoHandlerAdapter {
 	@Override
 	public void sessionClosed(IoSession session)
 			throws Exception {
-		Boolean isClose = (Boolean) session.getAttribute(Constant.IS_SESSION_CLOSE);
-		if (!isClose) {
-			logger.info("Session closed: " + session.getRemoteAddress());
-			userLogout(session);
-		}
+		logger.info("Session closed: " + session.getRemoteAddress());
+		removeSession(session);
 	}
 	
 	@Override
 	public void exceptionCaught(IoSession session, Throwable cause) 
 			throws Exception {
-		Boolean isClose = (Boolean) session.getAttribute(Constant.IS_SESSION_CLOSE);
-		if (!isClose) {
-			logger.warn("Session closed by exception: " + cause.getMessage());
-			userLogout(session);
-		} else {
-			logger.warn("Exception caught: " + cause.getMessage());
-		}
+		logger.warn("Session closed by exception: " + cause.getMessage());
+		removeSession(session);
 	}
 	
 	@Override
@@ -162,22 +164,24 @@ public class ServerHandler extends IoHandlerAdapter {
             throws Exception {
 		logger.info("Session overtime! close session : " + session.getRemoteAddress());
 		session.close(false);
+		removeSession(session);
     }
 	
-	
-	
-	
-	private void userLogout(IoSession session) {
-		session.setAttribute(Constant.IS_SESSION_CLOSE, true);
-		logger.info("Session count is: " + GlobalResource.getSessionCount(-1));
-		String sessionAccount = (String) session.getAttribute(Constant.SESSION_ACCOUNT);
+	/**
+	 * set session in User class as null or remove user
+	 * @param session
+	 */
+	private void removeSession(IoSession session) {
 		String account = (String) session.getAttribute(Constant.ACCOUNT);
-		GlobalResource.sessionMap.remove(sessionAccount);
-		if (account == null) return;
-		if (!GlobalResource.sessionMap.containsKey(account + Constant.TEXT_PORT) &&
-				!GlobalResource.sessionMap.containsKey(account + Constant.IMAGE_PORT)) {
-			logger.info("User " + account + " is logout");
+		User user = GlobalResource.userMap.get(account);
+		if (user == null) return;
+		Boolean flag = user.setIoSession(AddressUtil.getLocalPort(session), null);
+		if (flag)
+			logger.info("Session count is: " + GlobalResource.getSessionCount(-1));
+		// if not login remove user from userMap
+		if (!user.ifLogin()) {
 			GlobalResource.userMap.remove(account);
+			logger.info(account + " is logout!");
 		}
 	}
 	
