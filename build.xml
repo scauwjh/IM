@@ -7,6 +7,7 @@
     <property name="conf.dir" value="conf"/>
     <property name="client.main" value="com.java.im.running.ClientDemo"/>
     <property name="server.main" value="com.java.im.running.ServerDemo"/>
+    <property name="testclient.main" value="com.java.im.core.client.TestClient"/>
     <!-- locale jar packages -->
     <path id="lib-classpath">
         <fileset dir="${lib.dir}">
@@ -56,6 +57,18 @@
         <jar destfile="${run.dir}/server.jar" filesetmanifest="mergewithoutmain">           
             <manifest>
                 <attribute name="Main-Class" value="${server.main}"/>
+                <attribute name="Class-Path" value="."/>
+            </manifest>
+            <fileset dir="${classes.dir}"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/mina-core-2.0.7.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/log4j-1.2.17.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/slf4j-api-1.7.7.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/slf4j-log4j12-1.7.7.jar"/>
+        </jar>
+
+        <jar destfile="${run.dir}/testclient.jar" filesetmanifest="mergewithoutmain">           
+            <manifest>
+                <attribute name="Main-Class" value="${testclient.main}"/>
                 <attribute name="Class-Path" value="."/>
             </manifest>
             <fileset dir="${classes.dir}"/>

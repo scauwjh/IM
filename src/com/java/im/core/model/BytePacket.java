@@ -47,7 +47,9 @@ public class BytePacket {
 			// sender
 			begin = index;
 			index = header.indexOf('\n', begin + 1);
-			packet.setSender(header.substring(begin + 1, index));
+			String tmp = header.substring(begin + 1, index);
+			packet.setSender(tmp);
+			Debug.println("sender in toDataPacket: " + tmp);
 			// receiver
 			begin = index;
 			index = header.indexOf('\n', begin + 1);

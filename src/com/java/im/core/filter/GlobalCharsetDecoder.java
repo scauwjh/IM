@@ -28,13 +28,14 @@ public class GlobalCharsetDecoder extends CumulativeProtocolDecoder {
 		try {
 			// get header
 			length = in.getInt();
+			Debug.println("header len: " + length);
 			if (length == -1) {
 				DataPacket data = new DataPacket();
 				data.setType(Constant.TYPE_HEARTBEAT);
 				out.write(data);
 			} else {
 				if (length > in.remaining()) {
-					logger.info("Data may not enough in decoder");
+					logger.info("Data may not enough in decoder: header");
 					in.reset();
 					return false;
 				}
@@ -43,8 +44,9 @@ public class GlobalCharsetDecoder extends CumulativeProtocolDecoder {
 				encode.setHeader(header);
 				// get body
 				length = in.getInt();
+				Debug.println("body len: " + length);
 				if (length > 0 && length > in.remaining()) {
-					logger.info("Data may not enough in decoder");
+					logger.info("Data may not enough in decoder: body");
 					in.reset();
 					return false;
 				}

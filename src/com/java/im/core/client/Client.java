@@ -24,6 +24,8 @@ import com.java.im.util.Debug;
 public class Client {
 
 	public static final Logger logger = LoggerFactory.getLogger(Client.class);
+	
+	public static Boolean ifInit;
 
 	public static SocketConnector connector;
 
@@ -38,52 +40,59 @@ public class Client {
 	private ClientUtil util;
 
 	public Client() {
-		// init connector
-		connector = new NioSocketConnector(Runtime.getRuntime()
-				.availableProcessors());
-		connector.getSessionConfig().setUseReadOperation(true);
-		connector.setConnectTimeoutMillis(Constant.CONNECT_OVERTIME);
-		
-		connector.getFilterChain().addLast("codec",
-				new ProtocolCodecFilter(new GlobalCharsetCodecFactory()));
-		// 多线程处理过滤器
-		connector.getFilterChain().addLast("threadPool", new ExecutorFilter(
-				Executors.newCachedThreadPool()));
+		try {
+			// init connector
+			connector = new NioSocketConnector(Runtime.getRuntime()
+					.availableProcessors());
+			connector.getSessionConfig().setUseReadOperation(true);
+			connector.setConnectTimeoutMillis(Constant.CONNECT_OVERTIME);
+			
+			connector.getFilterChain().addLast("codec",
+					new ProtocolCodecFilter(new GlobalCharsetCodecFactory()));
+			// 多线程处理过滤器
+			connector.getFilterChain().addLast("threadPool", new ExecutorFilter(
+					Executors.newCachedThreadPool()));
 
-		// add heart beat filter
-		ClientKeepAliveMessageFactory ckamf = new ClientKeepAliveMessageFactory();
-		KeepAliveFilter hbFilter = new KeepAliveFilter(ckamf, IdleStatus.READER_IDLE,
-				 KeepAliveRequestTimeoutHandler.CLOSE);
-		hbFilter.setForwardEvent(true);
-		hbFilter.setRequestInterval(Constant.CLIENT_HEARTBEAT_INTERVAL);
-		hbFilter.setRequestTimeout(Constant.HEARTBEAT_TIMEOUT);
-		connector.getFilterChain().addLast("heartbeat", hbFilter);
+			// add heart beat filter
+			ClientKeepAliveMessageFactory ckamf = new ClientKeepAliveMessageFactory();
+			KeepAliveFilter hbFilter = new KeepAliveFilter(ckamf, IdleStatus.READER_IDLE,
+					 KeepAliveRequestTimeoutHandler.CLOSE);
+			hbFilter.setForwardEvent(true);
+			hbFilter.setRequestInterval(Constant.CLIENT_HEARTBEAT_INTERVAL);
+			hbFilter.setRequestTimeout(Constant.HEARTBEAT_TIMEOUT);
+			connector.getFilterChain().addLast("heartbeat", hbFilter);
 
-		
-		connector.setHandler(new ClientHandler() {
-			@Override
-			public void messageReceived(IoSession session, Object message)
-					throws Exception {
-				logger.info("message received from: "
-						+ session.getRemoteAddress());
-				messageHandler(message);
-			}
+			
+			connector.setHandler(new ClientHandler() {
+				@Override
+				public void messageReceived(IoSession session, Object message)
+						throws Exception {
+					logger.info("message received from: "
+							+ session.getRemoteAddress());
+					messageHandler(message);
+				}
 
-			@Override
-			public void sessionClosed(IoSession session) throws Exception {
-				logger.warn("lost connection from server");
-				closeSession(session);
-			}
-		}); // add handler
-		
-		connect(-1);
-		
-		Debug.println("connect to remote host: " + Constant.SERVER_HOST);
-		Debug.println("text port: " + Constant.TEXT_PORT);
-		Debug.println("image port: " + Constant.IMAGE_PORT);
+				@Override
+				public void sessionClosed(IoSession session) throws Exception {
+					logger.warn("lost connection from server");
+					closeSession(session);
+				}
+			}); // add handler
+			
+			connect(-1);
+			
+			Debug.println("connect to remote host: " + Constant.SERVER_HOST);
+			Debug.println("text port: " + Constant.TEXT_PORT);
+			Debug.println("image port: " + Constant.IMAGE_PORT);
 
-		// im api init
-		util = new ClientUtil();
+			// im api init
+			util = new ClientUtil();
+			ifInit = true;
+		} catch (Exception e) {
+			ifInit = false;
+			logger.error("Failed to init client!");
+			e.printStackTrace();
+		}
 	}
 	
 	/**

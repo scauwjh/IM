@@ -15,7 +15,7 @@ public class TestClient {
 
 	public static void main(String[] args) throws UnknownHostException,
 			IOException {
-		String host = "127.0.0.1";// "app1.ufriend.cc";
+		String host = "weixin.uutime.cn";// "app1.ufriend.cc";
 		int port = 7777;
 		Socket client = new Socket(host, port);
 		OutputStream writer = client.getOutputStream();
