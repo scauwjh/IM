@@ -25,8 +25,6 @@ public class Client {
 
 	public static final Logger logger = LoggerFactory.getLogger(Client.class);
 
-	protected Boolean ifInit;
-
 	public static SocketConnector connector;
 
 	public static IoSession textSession;
@@ -38,9 +36,21 @@ public class Client {
 	private static ConnectFuture imageFuture;
 
 	private ClientUtil util;
-
+	
 	public Client() {
+	
+	}
+	
+	/**
+	 * init client
+	 * @param host
+	 * <p>null for default host (Constant.SERVER_HOST)</p>
+	 * @return
+	 */
+	public boolean initClient(String host) {
 		try {
+			if (host != null)
+				Constant.SERVER_HOST = host;
 			// init connector
 			connector = new NioSocketConnector(Runtime.getRuntime()
 					.availableProcessors());
@@ -82,7 +92,7 @@ public class Client {
 			if (!connect(-1)) {
 				Debug.println("connect to remote host false!");
 				close();
-				return;
+				return false;
 			}
 
 			Debug.println("connect to remote host: " + Constant.SERVER_HOST);
@@ -91,11 +101,11 @@ public class Client {
 
 			// im api init
 			util = new ClientUtil();
-			this.setIfInit(true);
+			return true;
 		} catch (Exception e) {
-			this.setIfInit(false);
 			logger.error("Failed to init client!");
 			e.printStackTrace();
+			return true;
 		}
 	}
 
@@ -106,7 +116,7 @@ public class Client {
 	 * @return true or false
 	 * @throws Exception
 	 */
-	public static boolean connect(Integer port) throws Exception {
+	public boolean connect(Integer port) throws Exception {
 		if (port == Constant.TEXT_PORT || port <= 0) {
 			// connect to image port
 			textFuture = connector.connect(new InetSocketAddress(
@@ -169,7 +179,7 @@ public class Client {
 	public Boolean login(IoSession session, String user, String accessToken) {
 		if (!util.loginService(session, user, accessToken)) {
 			try {
-				Client.connect(-1);
+				connect(-1);
 			} catch (Exception e) {
 				e.printStackTrace();
 				return false;
@@ -206,9 +216,9 @@ public class Client {
 	 * @return
 	 */
 	public boolean sendImage(String sender, String receiver,
-			String accessToken, String params, String filePath) {
+			String accessToken, String params, byte[] file) {
 		return util.sendImage(imageSession, sender, receiver, accessToken,
-				params, filePath);
+				params, file);
 	}
 
 	// ---------------------------------------
@@ -241,13 +251,5 @@ public class Client {
 	 */
 	public void closeSession(IoSession session) {
 
-	}
-
-	public Boolean getIfInit() {
-		return ifInit;
-	}
-
-	public void setIfInit(Boolean ifInit) {
-		this.ifInit = ifInit;
 	}
 }

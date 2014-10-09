@@ -1,7 +1,5 @@
 package com.java.im.core.client.vo;
 
-import java.io.FileInputStream;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 
@@ -14,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import com.java.im.constant.Constant;
 import com.java.im.core.model.DataPacket;
 import com.java.im.util.Debug;
-import com.java.im.util.ImageUtil;
 
 public class ClientUtil {
 	
@@ -149,17 +146,14 @@ public class ClientUtil {
 	 * @param receiver
 	 * @param accessToken
 	 * @param params
-	 * @param filePath
+	 * @param file
 	 * @return
 	 */
 	public Boolean sendImage(IoSession session, String sender, 
-			String receiver, String accessToken, String params, String filePath) {
-		InputStream in;
+			String receiver, String accessToken, String params, byte[] file) {
 		try {
-			in = new FileInputStream(filePath);
-			byte[] dst = ImageUtil.imageCompress(in, 0.9, 1.0);
 			return sendData(session, sender, receiver, accessToken, "1", 
-					Constant.CONTENT_TYPE_IMAGE, params, dst);
+					Constant.CONTENT_TYPE_IMAGE, params, file);
 		} catch (Exception e) {
 			logger.error("Send image error: " + e.getLocalizedMessage());
 			Debug.printStackTrace(e);

@@ -1,5 +1,6 @@
 package com.java.im.core.server;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Map;
@@ -34,13 +35,17 @@ public class Server {
 	static {
 		String path = Server.class.getResource("/").getPath()
 				+ "imconfigure.properties";
-		Map<String, String> map = PropertiesUtil.getProperties(path);
-		Constant.SERVER_HOST = map.get("serverHost");
-		Constant.TEXT_PORT = Integer.valueOf(map.get("textPort"));
-		Constant.IMAGE_PORT = Integer.valueOf(map.get("imagePort"));
-		Constant.SERVER_BUFFER_SIZE = Integer.valueOf(map.get("bufferSize"));
-		Constant.SERVER_CACHE_SIZE = Integer.valueOf(map.get("cacheSize"));
-		Constant.IS_DEBUG = map.get("isDebug").equals("true");
+		File file = new File(path);
+		if (file.exists()) {
+			Map<String, String> map = PropertiesUtil.getProperties(path);
+			Constant.SERVER_HOST = map.get("serverHost");
+			Constant.TEXT_PORT = Integer.valueOf(map.get("textPort"));
+			Constant.IMAGE_PORT = Integer.valueOf(map.get("imagePort"));
+			Constant.SERVER_BUFFER_SIZE = Integer.valueOf(map.get("bufferSize"));
+			Constant.SERVER_CACHE_SIZE = Integer.valueOf(map.get("cacheSize"));
+			Constant.IS_DEBUG = map.get("isDebug").equals("true");
+			logger.info("Read properties from configure file of customer");
+		}
 	}
 	
 	public void server() throws IOException {

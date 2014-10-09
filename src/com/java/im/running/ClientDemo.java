@@ -1,6 +1,9 @@
 package com.java.im.running;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -9,6 +12,8 @@ import org.apache.mina.core.session.IoSession;
 import com.java.im.constant.Constant;
 import com.java.im.core.client.Client;
 import com.java.im.core.model.DataPacket;
+import com.java.im.util.Debug;
+import com.java.im.util.ImageUtil;
 import com.java.im.util.PropertiesUtil;
 import com.java.im.util.StringUtil;
 
@@ -29,13 +34,17 @@ public class ClientDemo extends Client {
 	static {
 		String path = ClientDemo.class.getResource("/").getPath() 
 				+ "imconfigure.properties";
-		Map<String, String> map = PropertiesUtil.getProperties(path);
-		Constant.SERVER_HOST = map.get("serverHost");
-		Constant.TEXT_PORT = Integer.valueOf(map.get("textPort"));
-		Constant.IMAGE_PORT = Integer.valueOf(map.get("imagePort"));
-		Constant.SERVER_BUFFER_SIZE = Integer.valueOf(map.get("bufferSize"));
-		Constant.SERVER_CACHE_SIZE = Integer.valueOf(map.get("cacheSize"));
-		Constant.IS_DEBUG = map.get("isDebug").equals("true");
+		File file = new File(path);
+		if (file.exists()) {
+			Map<String, String> map = PropertiesUtil.getProperties(path);
+			Constant.SERVER_HOST = map.get("serverHost");
+			Constant.TEXT_PORT = Integer.valueOf(map.get("textPort"));
+			Constant.IMAGE_PORT = Integer.valueOf(map.get("imagePort"));
+			Constant.SERVER_BUFFER_SIZE = Integer.valueOf(map.get("bufferSize"));
+			Constant.SERVER_CACHE_SIZE = Integer.valueOf(map.get("cacheSize"));
+			Constant.IS_DEBUG = map.get("isDebug").equals("true");
+			Debug.println("Read properties from configure file of customer");
+		}
 	}
 	
 	/**
@@ -90,7 +99,7 @@ public class ClientDemo extends Client {
 	
 	public static void main(String[] args) throws Exception {
 		client = new ClientDemo();
-		if (!client.getIfInit()) {
+		if (!client.initClient(null)) {
 			System.out.println("Failed to init client!");
 			return;
 		}
@@ -118,7 +127,10 @@ public class ClientDemo extends Client {
 			if (message.equals("image")) {
 				String path = "C:\\Users\\asus\\Desktop\\tmp\\123.png";
 				// use multiple thread to finish the service
-				client.sendImage(account, receiver, accessToken, "params", path);
+				InputStream inputStream;
+				inputStream = new FileInputStream(path);
+				byte[] dst = ImageUtil.imageCompress(inputStream, 0.9, 1.0);
+				client.sendImage(account, receiver, accessToken, "params", dst);
 				continue;
 			}
 			if (message.equals("close")) {
