@@ -37,34 +37,30 @@ public class Constant {
 	 */
 	public final static Integer CLIENT_HEARTBEAT_INTERVAL = 180;
 	/**
-	 * heart beat time out 20s
+	 * heart beat time out 5s
 	 */
-	public final static Integer HEARTBEAT_TIMEOUT = 20;
-	
-//	public final static String HEARTBEAT_REQUEST = "0x11";
-//	
-//	public final static String HEARTBEAT_RESPONSE = "0x12";
+	public final static Integer HEARTBEAT_TIMEOUT = 5;
 	
 	/**
-	 * connect overtime: 10s
+	 * connect overtime: 20s
 	 */
-	public static final Long CONNECT_OVERTIME = 10000L;
+	public static final Long CONNECT_OVERTIME = 20000L;
 	/**
 	 * session overtime： 5min
 	 */
 	public static final Long SESSION_OVERTIME = 300000L;
 	/**
-	 * login overtime: 10s
+	 * login overtime: 20s
 	 */
-	public static final Long LOGIN_OVERTIME = 10000L;
+	public static final Long LOGIN_OVERTIME = 20000L;
 	/**
-	 * send message overtime: 10s
+	 * send message overtime: 5s
 	 */
-	public static final Long MESSAGE_OVERTIME = 10000L;
+	public static final Long MESSAGE_OVERTIME = 5000L;
 	/**
-	 * send image overtime: 30s
+	 * send image overtime: 10s
 	 */
-	public static final Long IMAGE_OVERTIME = 30000L;
+	public static final Long IMAGE_OVERTIME = 10000L;
 	
 	
 	

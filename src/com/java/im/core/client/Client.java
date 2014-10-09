@@ -24,8 +24,8 @@ import com.java.im.util.Debug;
 public class Client {
 
 	public static final Logger logger = LoggerFactory.getLogger(Client.class);
-	
-	public static Boolean ifInit;
+
+	protected Boolean ifInit;
 
 	public static SocketConnector connector;
 
@@ -46,23 +46,23 @@ public class Client {
 					.availableProcessors());
 			connector.getSessionConfig().setUseReadOperation(true);
 			connector.setConnectTimeoutMillis(Constant.CONNECT_OVERTIME);
-			
+
 			connector.getFilterChain().addLast("codec",
 					new ProtocolCodecFilter(new GlobalCharsetCodecFactory()));
 			// 多线程处理过滤器
-			connector.getFilterChain().addLast("threadPool", new ExecutorFilter(
-					Executors.newCachedThreadPool()));
+			connector.getFilterChain().addLast("threadPool",
+					new ExecutorFilter(Executors.newCachedThreadPool()));
 
 			// add heart beat filter
 			ClientKeepAliveMessageFactory ckamf = new ClientKeepAliveMessageFactory();
-			KeepAliveFilter hbFilter = new KeepAliveFilter(ckamf, IdleStatus.READER_IDLE,
-					 KeepAliveRequestTimeoutHandler.CLOSE);
+			KeepAliveFilter hbFilter = new KeepAliveFilter(ckamf,
+					IdleStatus.READER_IDLE,
+					KeepAliveRequestTimeoutHandler.CLOSE);
 			hbFilter.setForwardEvent(true);
 			hbFilter.setRequestInterval(Constant.CLIENT_HEARTBEAT_INTERVAL);
 			hbFilter.setRequestTimeout(Constant.HEARTBEAT_TIMEOUT);
 			connector.getFilterChain().addLast("heartbeat", hbFilter);
 
-			
 			connector.setHandler(new ClientHandler() {
 				@Override
 				public void messageReceived(IoSession session, Object message)
@@ -78,46 +78,68 @@ public class Client {
 					closeSession(session);
 				}
 			}); // add handler
-			
-			connect(-1);
-			
+
+			if (!connect(-1)) {
+				Debug.println("connect to remote host false!");
+				close();
+				return;
+			}
+
 			Debug.println("connect to remote host: " + Constant.SERVER_HOST);
 			Debug.println("text port: " + Constant.TEXT_PORT);
 			Debug.println("image port: " + Constant.IMAGE_PORT);
 
 			// im api init
 			util = new ClientUtil();
-			ifInit = true;
+			this.setIfInit(true);
 		} catch (Exception e) {
-			ifInit = false;
+			this.setIfInit(false);
 			logger.error("Failed to init client!");
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * port: <= 0 is all
-	 * @param type
+	 * 
+	 * @param port
+	 * @return true or false
+	 * @throws Exception
 	 */
-	public static void connect(Integer port) {
+	public static boolean connect(Integer port) throws Exception {
 		if (port == Constant.TEXT_PORT || port <= 0) {
 			// connect to image port
 			textFuture = connector.connect(new InetSocketAddress(
 					Constant.SERVER_HOST, Constant.TEXT_PORT));
-			textFuture.awaitUninterruptibly();
-			textSession = textFuture.getSession();
-			textSession.setAttribute(Constant.SESSION_PORT, Constant.TEXT_PORT);
+			if (textFuture.awaitUninterruptibly(Constant.CONNECT_OVERTIME)) {
+				textSession = textFuture.getSession();
+				textSession.setAttribute(Constant.SESSION_PORT,
+						Constant.TEXT_PORT);
+			} else {
+				logger.warn("Text port connect falsed!");
+				return false;
+			}
 		}
 		if (port == Constant.IMAGE_PORT || port <= 0) {
 			// connect to image port
 			imageFuture = connector.connect(new InetSocketAddress(
 					Constant.SERVER_HOST, Constant.IMAGE_PORT));
-			imageFuture.awaitUninterruptibly();
-			imageSession = imageFuture.getSession();
-			imageSession.setAttribute(Constant.SESSION_PORT, Constant.IMAGE_PORT);
+			if (imageFuture.awaitUninterruptibly(Constant.CONNECT_OVERTIME)) {
+				imageSession = imageFuture.getSession();
+				imageSession.setAttribute(Constant.SESSION_PORT,
+						Constant.IMAGE_PORT);
+			} else {
+				logger.warn("Image port connect falsed!");
+				return false;
+			}
+		} else if (port > 0 && port != Constant.TEXT_PORT
+				&& port != Constant.IMAGE_PORT) {
+			logger.warn("Port is illega!");
+			return false;
 		}
+		return true;
 	}
-	
+
 	public void close() {
 		connector.dispose();
 		connector = null;
@@ -125,34 +147,41 @@ public class Client {
 
 	/**
 	 * init login
+	 * 
 	 * @param user
 	 * @param accessToken
 	 * @return
 	 */
 	public Boolean login(String user, String accessToken) {
-		if (!util.login(textSession, user, accessToken))
+		if (!util.loginService(textSession, user, accessToken))
 			return false;
-		return util.login(imageSession, user, accessToken);
+		return util.loginService(imageSession, user, accessToken);
 	}
-	
+
 	/**
 	 * login again
+	 * 
 	 * @param session
 	 * @param user
 	 * @param accessToken
 	 * @return
 	 */
 	public Boolean login(IoSession session, String user, String accessToken) {
-		if (!util.login(session, user, accessToken)) {
-			Integer port = (Integer) session.getAttribute(Constant.SESSION_PORT);
-			Client.connect(port);
-			return util.login(session, user, accessToken);
+		if (!util.loginService(session, user, accessToken)) {
+			try {
+				Client.connect(-1);
+			} catch (Exception e) {
+				e.printStackTrace();
+				return false;
+			}
+			return this.login(user, accessToken);
 		}
 		return true;
 	}
 
 	/**
 	 * send message
+	 * 
 	 * @param sender
 	 * @param receiver
 	 * @param accessToken
@@ -168,6 +197,7 @@ public class Client {
 
 	/**
 	 * send image
+	 * 
 	 * @param sender
 	 * @param receiver
 	 * @param accessToken
@@ -185,8 +215,13 @@ public class Client {
 	// methods for overriding
 	// ---------------------------------------
 	/**
-	 * <p>message handler</p>
-	 * <p>override this method to write your service</p>
+	 * <p>
+	 * message handler
+	 * </p>
+	 * <p>
+	 * override this method to write your service
+	 * </p>
+	 * 
 	 * @param message
 	 * @throws Exception
 	 */
@@ -195,11 +230,24 @@ public class Client {
 	}
 
 	/**
-	 * <p>session closed</p>
-	 * <p>override this method to write your service</p>
+	 * <p>
+	 * session closed
+	 * </p>
+	 * <p>
+	 * override this method to write your service
+	 * </p>
+	 * 
 	 * @param session
 	 */
 	public void closeSession(IoSession session) {
 
+	}
+
+	public Boolean getIfInit() {
+		return ifInit;
+	}
+
+	public void setIfInit(Boolean ifInit) {
+		this.ifInit = ifInit;
 	}
 }

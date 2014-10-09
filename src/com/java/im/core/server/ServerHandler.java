@@ -46,7 +46,8 @@ public class ServerHandler extends IoHandlerAdapter {
 			// login
 			if (type.equals(Constant.TYPE_LOGIN)) {
 				Login login = new Login();
-				packet.setSender(Constant.SERVER_NAME);
+				Integer port = AddressUtil.getLocalPort(session);
+				packet.setSender(Constant.SERVER_NAME + port);
 				packet.setReceiver(sender);
 				if (!login.login(sender, token, address)) {
 					Debug.println("login failed");
@@ -63,7 +64,6 @@ public class ServerHandler extends IoHandlerAdapter {
 				}
 				// set attribute: account
 				session.setAttribute(Constant.ACCOUNT, sender);
-				Integer port = AddressUtil.getLocalPort(session);
 				user.setIoSession(port, session);
 				GlobalResource.userMap.put(sender, user);
 				// return packet

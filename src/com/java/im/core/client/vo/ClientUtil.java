@@ -22,38 +22,44 @@ public class ClientUtil {
 	
 	
 	
-	public Boolean login(IoSession session, String account, String accessToken) {
-		DataPacket packet = new DataPacket();
-		packet.setType(Constant.TYPE_LOGIN);
-		packet.setSender(account);
-		packet.setAccessToken(accessToken);
-		packet.setContentType(Constant.CONTENT_TYPE_LOGIN);
-		packet.setTimeStamp(new Date().toString());
-		packet.setStatus("0");
-		// send login message
-		WriteFuture write = session.write(packet);
-		if (write.awaitUninterruptibly(Constant.MESSAGE_OVERTIME)) {
-			if (!write.isWritten()) {
-				Debug.println("Failed to write to: " + session.getRemoteAddress());
-				return false;
-			}
-		} else {
-			Debug.println("Write message over time in loginServeice");
-			return false;
-		}
-		// read return message
-		ReadFuture read = session.read();
-		if (read.awaitUninterruptibly(Constant.MESSAGE_OVERTIME)) {
-			packet = (DataPacket) read.getMessage();
-			if (packet.getStatus().equals("1")) {
-				Debug.println("Login succeed");
-				return true;
+	public Boolean loginService(IoSession session, String account, String accessToken) {
+		try {
+			DataPacket packet = new DataPacket();
+			packet.setType(Constant.TYPE_LOGIN);
+			packet.setSender(account);
+			packet.setAccessToken(accessToken);
+			packet.setContentType(Constant.CONTENT_TYPE_LOGIN);
+			packet.setTimeStamp(new Date().toString());
+			packet.setStatus("0");
+			// send login message
+			WriteFuture write = session.write(packet);
+			if (write.awaitUninterruptibly(Constant.MESSAGE_OVERTIME)) {
+				if (!write.isWritten()) {
+					Debug.println("Failed to write to: " + session.getRemoteAddress());
+					return false;
+				}
 			} else {
-				Debug.println("Login failed");
+				Debug.println("Write message over time in loginServeice");
 				return false;
 			}
-		} else {
-			Debug.println("Read message over time in loginServeice");
+			// read return message
+			ReadFuture read = session.read();
+			if (read.awaitUninterruptibly(Constant.MESSAGE_OVERTIME)) {
+				packet = (DataPacket) read.getMessage();
+				if (packet.getStatus().equals("1")) {
+					Debug.println("Login succeed");
+					return true;
+				} else {
+					Debug.println("Login failed");
+					return false;
+				}
+			} else {
+				Debug.println("Read message over time in loginServeice");
+				return false;
+			}
+		} catch (Exception e) {
+			Debug.printStackTrace(e);
+			logger.warn("Exception in loginService method");
 			return false;
 		}
 	}

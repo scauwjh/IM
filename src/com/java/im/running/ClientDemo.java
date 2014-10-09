@@ -75,7 +75,7 @@ public class ClientDemo extends Client {
 		int count = 0;
 		while (true) {
 			try {
-				Thread.sleep(3000L);
+				Thread.sleep(2000L);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -90,6 +90,10 @@ public class ClientDemo extends Client {
 	
 	public static void main(String[] args) throws Exception {
 		client = new ClientDemo();
+		if (!client.getIfInit()) {
+			System.out.println("Failed to init client!");
+			return;
+		}
 		Scanner in = new Scanner(System.in);
 		System.out.println("enter a name for user: ");
 		account = in.next();
