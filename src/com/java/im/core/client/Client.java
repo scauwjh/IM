@@ -1,25 +1,26 @@
 package com.java.im.core.client;
 
+import java.io.File;
 import java.net.InetSocketAddress;
+import java.util.Map;
 import java.util.concurrent.Executors;
 
 import org.apache.mina.core.future.ConnectFuture;
-import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.executor.ExecutorFilter;
-import org.apache.mina.filter.keepalive.KeepAliveFilter;
-import org.apache.mina.filter.keepalive.KeepAliveRequestTimeoutHandler;
 import org.apache.mina.transport.socket.SocketConnector;
 import org.apache.mina.transport.socket.nio.NioSocketConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.java.im.constant.Constant;
+import com.java.im.core.client.vo.ClientHeartbeat;
 import com.java.im.core.client.vo.ClientUtil;
-import com.java.im.core.filter.ClientKeepAliveMessageFactory;
 import com.java.im.core.filter.GlobalCharsetCodecFactory;
+import com.java.im.demo.ClientDemo;
 import com.java.im.util.Debug;
+import com.java.im.util.PropertiesUtil;
 
 public class Client {
 
@@ -31,11 +32,33 @@ public class Client {
 
 	public static IoSession imageSession;
 
-	private static ConnectFuture textFuture;
+	private ConnectFuture textFuture;
 
-	private static ConnectFuture imageFuture;
+	private ConnectFuture imageFuture;
 
 	private ClientUtil util;
+	
+	private ClientHeartbeat hearbeat;
+	
+	
+	/**
+	 * 获取配置
+	 */
+	static {
+		String path = ClientDemo.class.getResource("/").getPath() 
+				+ "imconfigure.properties";
+		File file = new File(path);
+		if (file.exists()) {
+			Map<String, String> map = PropertiesUtil.getProperties(path);
+			Constant.SERVER_HOST = map.get("serverHost");
+			Constant.TEXT_PORT = Integer.valueOf(map.get("textPort"));
+			Constant.IMAGE_PORT = Integer.valueOf(map.get("imagePort"));
+			Constant.SERVER_BUFFER_SIZE = Integer.valueOf(map.get("bufferSize"));
+			Constant.SERVER_CACHE_SIZE = Integer.valueOf(map.get("cacheSize"));
+			Constant.IS_DEBUG = map.get("isDebug").equals("true");
+			Debug.println(Constant.DEBUG_INFO, "Read properties from configure file of customer");
+		}
+	}
 	
 	public Client() {
 	
@@ -49,30 +72,27 @@ public class Client {
 	 */
 	public boolean initClient(String host) {
 		try {
+			connector = null;
+			textSession = null;
+			imageSession = null;
 			if (host != null)
 				Constant.SERVER_HOST = host;
 			// init connector
 			connector = new NioSocketConnector(Runtime.getRuntime()
 					.availableProcessors());
+			// use read operation
 			connector.getSessionConfig().setUseReadOperation(true);
+			//connect overtime
 			connector.setConnectTimeoutMillis(Constant.CONNECT_OVERTIME);
-
+//			// write overtime
+//			connector.getSessionConfig().setWriteTimeout(Constant.WRITE_OVERTIME);
+			// add codec filter
 			connector.getFilterChain().addLast("codec",
 					new ProtocolCodecFilter(new GlobalCharsetCodecFactory()));
-			// 多线程处理过滤器
+			// add thread poll filter
 			connector.getFilterChain().addLast("threadPool",
 					new ExecutorFilter(Executors.newCachedThreadPool()));
-
-			// add heart beat filter
-			ClientKeepAliveMessageFactory ckamf = new ClientKeepAliveMessageFactory();
-			KeepAliveFilter hbFilter = new KeepAliveFilter(ckamf,
-					IdleStatus.READER_IDLE,
-					KeepAliveRequestTimeoutHandler.CLOSE);
-			hbFilter.setForwardEvent(true);
-			hbFilter.setRequestInterval(Constant.CLIENT_HEARTBEAT_INTERVAL);
-			hbFilter.setRequestTimeout(Constant.HEARTBEAT_TIMEOUT);
-			connector.getFilterChain().addLast("heartbeat", hbFilter);
-
+			// set handler
 			connector.setHandler(new ClientHandler() {
 				@Override
 				public void messageReceived(IoSession session, Object message)
@@ -87,25 +107,30 @@ public class Client {
 					logger.warn("lost connection from server");
 					closeSession(session);
 				}
-			}); // add handler
-
+			});
+			// connect server
 			if (!connect(-1)) {
-				Debug.println("connect to remote host false!");
+				Debug.println(Constant.DEBUG_INFO, "connect to remote host false!");
 				close();
 				return false;
 			}
-
-			Debug.println("connect to remote host: " + Constant.SERVER_HOST);
-			Debug.println("text port: " + Constant.TEXT_PORT);
-			Debug.println("image port: " + Constant.IMAGE_PORT);
+			
+			Debug.println(Constant.DEBUG_INFO, "connect to remote host: " + Constant.SERVER_HOST);
+			Debug.println(Constant.DEBUG_INFO, "text port: " + Constant.TEXT_PORT);
+			Debug.println(Constant.DEBUG_INFO, "image port: " + Constant.IMAGE_PORT);
 
 			// im api init
 			util = new ClientUtil();
+			
+			// start heartbeat thread
+			hearbeat = new ClientHeartbeat();
+			hearbeat.start();
+			
 			return true;
 		} catch (Exception e) {
 			logger.error("Failed to init client!");
 			e.printStackTrace();
-			return true;
+			return false;
 		}
 	}
 
@@ -116,43 +141,51 @@ public class Client {
 	 * @return true or false
 	 * @throws Exception
 	 */
-	public boolean connect(Integer port) throws Exception {
-		if (port == Constant.TEXT_PORT || port <= 0) {
-			// connect to image port
-			textFuture = connector.connect(new InetSocketAddress(
-					Constant.SERVER_HOST, Constant.TEXT_PORT));
-			if (textFuture.awaitUninterruptibly(Constant.CONNECT_OVERTIME)) {
-				textSession = textFuture.getSession();
-				textSession.setAttribute(Constant.SESSION_PORT,
-						Constant.TEXT_PORT);
-			} else {
-				logger.warn("Text port connect falsed!");
+	private boolean connect(Integer port) {
+		try {
+			if (port == Constant.TEXT_PORT || port <= 0) {
+				// connect to image port
+				textFuture = connector.connect(new InetSocketAddress(
+						Constant.SERVER_HOST, Constant.TEXT_PORT));
+				if (textFuture.awaitUninterruptibly(Constant.CONNECT_OVERTIME)) {
+					textSession = textFuture.getSession();
+					textSession.setAttribute(Constant.SESSION_PORT,
+							Constant.TEXT_PORT);
+				} else {
+					logger.warn("Text port connect falsed!");
+					return false;
+				}
+			}
+			if (port == Constant.IMAGE_PORT || port <= 0) {
+				// connect to image port
+				imageFuture = connector.connect(new InetSocketAddress(
+						Constant.SERVER_HOST, Constant.IMAGE_PORT));
+				if (imageFuture.awaitUninterruptibly(Constant.CONNECT_OVERTIME)) {
+					imageSession = imageFuture.getSession();
+					imageSession.setAttribute(Constant.SESSION_PORT,
+							Constant.IMAGE_PORT);
+				} else {
+					logger.warn("Image port connect falsed!");
+					return false;
+				}
+			} else if (port > 0 && port != Constant.TEXT_PORT
+					&& port != Constant.IMAGE_PORT) {
+				logger.warn("Port is illega!");
 				return false;
 			}
-		}
-		if (port == Constant.IMAGE_PORT || port <= 0) {
-			// connect to image port
-			imageFuture = connector.connect(new InetSocketAddress(
-					Constant.SERVER_HOST, Constant.IMAGE_PORT));
-			if (imageFuture.awaitUninterruptibly(Constant.CONNECT_OVERTIME)) {
-				imageSession = imageFuture.getSession();
-				imageSession.setAttribute(Constant.SESSION_PORT,
-						Constant.IMAGE_PORT);
-			} else {
-				logger.warn("Image port connect falsed!");
-				return false;
-			}
-		} else if (port > 0 && port != Constant.TEXT_PORT
-				&& port != Constant.IMAGE_PORT) {
-			logger.warn("Port is illega!");
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("Exception in Client.connect: " + e.getMessage());
 			return false;
 		}
-		return true;
 	}
 
 	public void close() {
-		connector.dispose();
+		if (connector.isActive())
+			connector.dispose();
 		connector = null;
+		hearbeat.userStop();
 	}
 
 	/**
@@ -162,7 +195,7 @@ public class Client {
 	 * @param accessToken
 	 * @return
 	 */
-	public Boolean login(String user, String accessToken) {
+	public Boolean initLogin(String user, String accessToken) {
 		if (!util.loginService(textSession, user, accessToken))
 			return false;
 		return util.loginService(imageSession, user, accessToken);
@@ -177,16 +210,26 @@ public class Client {
 	 * @return
 	 */
 	public Boolean login(IoSession session, String user, String accessToken) {
-		if (!util.loginService(session, user, accessToken)) {
-			try {
-				connect(-1);
-			} catch (Exception e) {
-				e.printStackTrace();
-				return false;
-			}
-			return this.login(user, accessToken);
+		try {
+			Integer port = (Integer) session.getAttribute(Constant.SESSION_PORT);
+			Debug.println(Constant.DEBUG_INFO, "Remote session port is " + port);
+			boolean flag = true;
+			if (!session.isConnected()) {
+				Debug.println(2, "Session is disconnected");
+				connect(port);
+				flag = false;
+				if (Constant.TEXT_PORT.equals(port))
+					flag = util.loginService(textSession, user, accessToken);
+				else if(Constant.IMAGE_PORT.equals(port))
+					flag = util.loginService(imageSession, user, accessToken);
+			} else 
+				flag = util.loginService(session, user, accessToken);
+			return flag;
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("Login failed in login again method");
+			return false;
 		}
-		return true;
 	}
 
 	/**

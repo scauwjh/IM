@@ -84,7 +84,7 @@ public class DataPacket {
 			packet.setBody(body);
 			return packet;
 		} catch (UnsupportedEncodingException e) {
-			Debug.printStackTrace(e);
+			Debug.printStackTrace(Constant.DEBUG_WARN, e);
 			return null;
 		}
 	}

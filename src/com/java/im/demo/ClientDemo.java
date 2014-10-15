@@ -1,10 +1,8 @@
-package com.java.im.running;
+package com.java.im.demo;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.util.Map;
 import java.util.Scanner;
 
 import org.apache.mina.core.session.IoSession;
@@ -12,9 +10,7 @@ import org.apache.mina.core.session.IoSession;
 import com.java.im.constant.Constant;
 import com.java.im.core.client.Client;
 import com.java.im.core.model.DataPacket;
-import com.java.im.util.Debug;
 import com.java.im.util.ImageUtil;
-import com.java.im.util.PropertiesUtil;
 import com.java.im.util.StringUtil;
 
 public class ClientDemo extends Client {
@@ -26,26 +22,6 @@ public class ClientDemo extends Client {
 	public static String accessToken;
 	
 	public static ClientDemo client;
-	
-	
-	/**
-	 * 获取配置
-	 */
-	static {
-		String path = ClientDemo.class.getResource("/").getPath() 
-				+ "imconfigure.properties";
-		File file = new File(path);
-		if (file.exists()) {
-			Map<String, String> map = PropertiesUtil.getProperties(path);
-			Constant.SERVER_HOST = map.get("serverHost");
-			Constant.TEXT_PORT = Integer.valueOf(map.get("textPort"));
-			Constant.IMAGE_PORT = Integer.valueOf(map.get("imagePort"));
-			Constant.SERVER_BUFFER_SIZE = Integer.valueOf(map.get("bufferSize"));
-			Constant.SERVER_CACHE_SIZE = Integer.valueOf(map.get("cacheSize"));
-			Constant.IS_DEBUG = map.get("isDebug").equals("true");
-			Debug.println("Read properties from configure file of customer");
-		}
-	}
 	
 	/**
 	 * 重写数据接收的方法
@@ -61,7 +37,7 @@ public class ClientDemo extends Client {
 			System.out.println("Content type: " + packet.getContentType());
 			System.out.println("TimeStamp: " + packet.getTimeStamp());
 			if (packet.getContentType().equals(Constant.CONTENT_TYPE_IMAGE)) {
-				String file = "C:\\Users\\asus\\Desktop\\rec-(" + account + ")-from-(" + packet.getSender() + ")" 
+				String file = "C:\\Users\\kei\\Desktop\\rec-(" + account + ")-from-(" + packet.getSender() + ")" 
 						+ StringUtil.randString(5)  + ".jpg";
 				FileOutputStream out = new FileOutputStream(file);
 				out.write(packet.getBody());
@@ -80,7 +56,7 @@ public class ClientDemo extends Client {
 	 */
 	@Override
 	public void closeSession(IoSession session) {
-		System.out.println("!!!!!session is closed!!!!");
+		System.out.println("session is closed!");
 		int count = 0;
 		while (true) {
 			try {
@@ -101,6 +77,7 @@ public class ClientDemo extends Client {
 		client = new ClientDemo();
 		if (!client.initClient(null)) {
 			System.out.println("Failed to init client!");
+			client.close();
 			return;
 		}
 		Scanner in = new Scanner(System.in);
@@ -108,7 +85,7 @@ public class ClientDemo extends Client {
 		account = in.next();
 		accessToken = "123456";
 		// login
-		if (!client.login(account, accessToken)) {
+		if (!client.initLogin(account, accessToken)) {
 			System.out.println("login failed!");
 			in.close();
 			client.close();
@@ -125,22 +102,28 @@ public class ClientDemo extends Client {
 			}
 			String message = in.next();
 			if (message.equals("image")) {
-				String path = "C:\\Users\\asus\\Desktop\\tmp\\123.png";
+				String path = "C:\\Users\\kei\\Desktop\\友换\\123.png";
 				// use multiple thread to finish the service
 				InputStream inputStream;
 				inputStream = new FileInputStream(path);
 				byte[] dst = ImageUtil.imageCompress(inputStream, 0.9, 1.0);
-				client.sendImage(account, receiver, accessToken, "params", dst);
+				if (!client.sendImage(account, receiver, accessToken, "params", dst)) {
+					System.out.println("Failed to send image");
+					client.login(Client.imageSession, account, accessToken);
+				}
 				continue;
 			}
 			if (message.equals("close")) {
 				continue;
 			}
 			if (message.equals("init")) {
-				client.login(account, accessToken);
+				client.initLogin(account, accessToken);
 				continue;
 			}
-			client.sendMessage(account, receiver, accessToken, "params", message);
+			if (!client.sendMessage(account, receiver, accessToken, "params", message)){
+				System.out.println("Failed to send message");
+				client.login(Client.textSession, account, accessToken);
+			}
 		}
 		in.close();
 	}

@@ -5,6 +5,7 @@ import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.java.im.constant.Constant;
 import com.java.im.util.Debug;
 
 public class ClientHandler extends IoHandlerAdapter {
@@ -27,7 +28,7 @@ public class ClientHandler extends IoHandlerAdapter {
 	public void exceptionCaught(IoSession session, Throwable cause)
 		throws Exception {
 		logger.error("exception throw: " + cause.getMessage());
-		Debug.printStackTrace(cause);
+		Debug.printStackTrace(Constant.DEBUG_INFO, cause);
 	}
 	
 	@Override

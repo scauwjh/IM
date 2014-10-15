@@ -1,4 +1,4 @@
-package com.java.im.running;
+package com.java.im.demo;
 
 import com.java.im.core.server.Server;
 

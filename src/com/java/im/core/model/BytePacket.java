@@ -49,7 +49,7 @@ public class BytePacket {
 			index = header.indexOf('\n', begin + 1);
 			String tmp = header.substring(begin + 1, index);
 			packet.setSender(tmp);
-			Debug.println("sender in toDataPacket: " + tmp);
+			Debug.println(Constant.DEBUG_DEBUG, "sender in toDataPacket: " + tmp);
 			// receiver
 			begin = index;
 			index = header.indexOf('\n', begin + 1);
@@ -78,7 +78,7 @@ public class BytePacket {
 			packet.setBody(body);
 			return packet;
 		} catch (UnsupportedEncodingException e) {
-			Debug.printStackTrace(e);
+			Debug.printStackTrace(Constant.DEBUG_WARN, e);
 			return null;
 		}
 	}

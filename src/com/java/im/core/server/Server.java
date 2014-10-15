@@ -26,7 +26,7 @@ public class Server {
 	
 	public static final Logger logger = LoggerFactory.getLogger(Server.class);
 	
-	private IoAcceptor acceptor;
+	public static IoAcceptor acceptor;
 	
 	
 	/**

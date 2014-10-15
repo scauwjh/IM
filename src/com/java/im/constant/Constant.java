@@ -28,6 +28,14 @@ public class Constant {
 	
 	public static final String SERVER_NAME = "#UFRIEND_SERVER#";
 	
+	public static final Integer DEBUG_ERROR = 0;
+	
+	public static final Integer DEBUG_WARN = 1;
+	
+	public static final Integer DEBUG_INFO = 2;
+	
+	public static final Integer DEBUG_DEBUG = 3;
+	
 	/**
 	 * server heart beat timeout 240s
 	 */
@@ -35,11 +43,11 @@ public class Constant {
 	/**
 	 * client heart beat interval 180s
 	 */
-	public final static Integer CLIENT_HEARTBEAT_INTERVAL = 180;
+	public final static Long CLIENT_HEARTBEAT_INTERVAL = 180000L;
 	/**
-	 * heart beat time out 5s
+	 * heart beat time out 3s
 	 */
-	public final static Integer HEARTBEAT_TIMEOUT = 5;
+	public final static Long HEARTBEAT_TIMEOUT = 3000L;
 	
 	/**
 	 * connect overtime: 20s
@@ -61,8 +69,6 @@ public class Constant {
 	 * send image overtime: 10s
 	 */
 	public static final Long IMAGE_OVERTIME = 10000L;
-	
-	
 	
 	/**
 	 * default host 127.0.0.1
@@ -87,5 +93,5 @@ public class Constant {
 	/**
 	 * default isDebug true
 	 */
-	public static Boolean IS_DEBUG = true;
+	public static Boolean IS_DEBUG = false;
 }

@@ -19,7 +19,7 @@ public class ClientUtil {
 	
 	
 	
-	public Boolean loginService(IoSession session, String account, String accessToken) {
+	public Boolean loginService(IoSession session, String account, String accessToken) {		
 		try {
 			DataPacket packet = new DataPacket();
 			packet.setType(Constant.TYPE_LOGIN);
@@ -32,11 +32,11 @@ public class ClientUtil {
 			WriteFuture write = session.write(packet);
 			if (write.awaitUninterruptibly(Constant.MESSAGE_OVERTIME)) {
 				if (!write.isWritten()) {
-					Debug.println("Failed to write to: " + session.getRemoteAddress());
+					Debug.println(Constant.DEBUG_INFO, "Failed to write to: " + session.getRemoteAddress());
 					return false;
 				}
 			} else {
-				Debug.println("Write message over time in loginServeice");
+				Debug.println(Constant.DEBUG_INFO, "Write message over time in loginServeice");
 				return false;
 			}
 			// read return message
@@ -44,18 +44,18 @@ public class ClientUtil {
 			if (read.awaitUninterruptibly(Constant.MESSAGE_OVERTIME)) {
 				packet = (DataPacket) read.getMessage();
 				if (packet.getStatus().equals("1")) {
-					Debug.println("Login succeed");
+					Debug.println(Constant.DEBUG_INFO, "Login succeed");
 					return true;
 				} else {
-					Debug.println("Login failed");
+					Debug.println(Constant.DEBUG_INFO, "Login failed");
 					return false;
 				}
 			} else {
-				Debug.println("Read message over time in loginServeice");
+				Debug.println(Constant.DEBUG_INFO, "Read message over time in loginServeice");
 				return false;
 			}
 		} catch (Exception e) {
-			Debug.printStackTrace(e);
+			Debug.printStackTrace(Constant.DEBUG_INFO, e);
 			logger.warn("Exception in loginService method");
 			return false;
 		}
@@ -88,7 +88,7 @@ public class ClientUtil {
 			msg.setBody(body);
 			WriteFuture write = session.write(msg);
 			if (!write.awaitUninterruptibly(Constant.MESSAGE_OVERTIME)) {
-				Debug.println("Failed to write!!!");
+				Debug.println(Constant.DEBUG_INFO, "Write overtime in sendDate");
 				return false;
 			}
 			if (write.isWritten())
@@ -96,7 +96,7 @@ public class ClientUtil {
 			return false;
 		} catch (Exception e) {
 			logger.error("Send data error: " + e.getLocalizedMessage());
-			Debug.printStackTrace(e);
+			Debug.printStackTrace(Constant.DEBUG_INFO, e);
 			return false;
 		}
 	}
@@ -120,7 +120,7 @@ public class ClientUtil {
 					Constant.CONTENT_TYPE_MESSAGE, params, body);
 		} catch (UnsupportedEncodingException e) {
 			logger.error("Send message error: " + e.getLocalizedMessage());
-			Debug.printStackTrace(e);
+			Debug.printStackTrace(Constant.DEBUG_INFO, e);
 			return false;
 		}
 	}
@@ -156,7 +156,7 @@ public class ClientUtil {
 					Constant.CONTENT_TYPE_IMAGE, params, file);
 		} catch (Exception e) {
 			logger.error("Send image error: " + e.getLocalizedMessage());
-			Debug.printStackTrace(e);
+			Debug.printStackTrace(Constant.DEBUG_INFO, e);
 			return false;
 		}
 	}

@@ -50,7 +50,7 @@ public class ServerHandler extends IoHandlerAdapter {
 				packet.setSender(Constant.SERVER_NAME + port);
 				packet.setReceiver(sender);
 				if (!login.login(sender, token, address)) {
-					Debug.println("login failed");
+					Debug.println(Constant.DEBUG_INFO, "Login failed");
 					packet.setStatus("0");
 					session.write(packet);
 					return;
@@ -70,12 +70,12 @@ public class ServerHandler extends IoHandlerAdapter {
 				packet.setStatus("1");
 				session.write(packet);
 				
-				Debug.println("online count: " + GlobalResource.userMap.size());
+				Debug.println(Constant.DEBUG_INFO, "online count: " + GlobalResource.userMap.size());
 				
 				// send offline message, message from cache or DB
 				List<Object> cacheMsg = GlobalResource.messageQueue.get(sender);
 				if (cacheMsg != null) {
-					Debug.println("offline message list size: " + cacheMsg.size());
+					Debug.println(Constant.DEBUG_INFO, "Offline message list size: " + cacheMsg.size());
 					for (int i = 0; i < cacheMsg.size(); i++) {
 						session.write(cacheMsg.get(i));
 					}
@@ -110,7 +110,7 @@ public class ServerHandler extends IoHandlerAdapter {
 					sendSess = toUser.getIoSession(toPort);
 				}
 				if (sendSess != null && sendSess.getRemoteAddress() != null) {
-					Debug.println("message will send to: " + receiver);
+					Debug.println(Constant.DEBUG_DEBUG, "Message will send to: " + receiver);
 					sendSess.write(packet);// send message
 				}
 				else {
@@ -118,11 +118,11 @@ public class ServerHandler extends IoHandlerAdapter {
 						// remove user?
 					}
 					// not online
-					Debug.println("receiver " + receiver + " not online");
+					Debug.println(Constant.DEBUG_DEBUG, "Receiver " + receiver + " not online");
 					List<Object> list = GlobalResource.messageQueue.get(receiver);
 					if (list == null) {
 						list = new ArrayList<Object>();
-						Debug.println("list is null");
+						Debug.println(Constant.DEBUG_DEBUG, "list is null");
 					}
 					list.add(packet);
 					GlobalResource.messageQueue.put(receiver, list); // save to messageQueue
@@ -184,7 +184,7 @@ public class ServerHandler extends IoHandlerAdapter {
 		if (!user.ifLogin()) {
 			GlobalResource.userMap.remove(account);
 			logger.info(account + " is logout!");
-			Debug.println("online count: " + GlobalResource.userMap.size());
+			Debug.println(Constant.DEBUG_INFO, "Online count: " + GlobalResource.userMap.size());
 		}
 	}
 	

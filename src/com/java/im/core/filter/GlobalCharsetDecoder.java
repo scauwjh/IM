@@ -28,7 +28,7 @@ public class GlobalCharsetDecoder extends CumulativeProtocolDecoder {
 		try {
 			// get header
 			length = in.getInt();
-			Debug.println("header len: " + length);
+			Debug.println(Constant.DEBUG_DEBUG, "header len: " + length);
 			if (length == -1) {
 				DataPacket data = new DataPacket();
 				data.setType(Constant.TYPE_HEARTBEAT);
@@ -44,7 +44,7 @@ public class GlobalCharsetDecoder extends CumulativeProtocolDecoder {
 				encode.setHeader(header);
 				// get body
 				length = in.getInt();
-				Debug.println("body len: " + length);
+				Debug.println(Constant.DEBUG_DEBUG, "body len: " + length);
 				if (length > 0 && length > in.remaining()) {
 					logger.info("Data may not enough in decoder: body");
 					in.reset();
@@ -61,14 +61,14 @@ public class GlobalCharsetDecoder extends CumulativeProtocolDecoder {
 			}
 			// if remaining
 			if (in.remaining() > 0) {
-				Debug.println("Buffer is remaining");
+				Debug.println(Constant.DEBUG_DEBUG, "Buffer is remaining");
 				return true;
 			} else {
 				return false;
 			}
 		} catch (Exception e) {
 			logger.info("Exception: Data may not enough in decoder");
-			Debug.printStackTrace(e);
+			Debug.printStackTrace(Constant.DEBUG_WARN, e);
 			in.reset();
 			return false;
 		}
