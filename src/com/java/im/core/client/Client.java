@@ -1,8 +1,6 @@
 package com.java.im.core.client;
 
-import java.io.File;
 import java.net.InetSocketAddress;
-import java.util.Map;
 import java.util.concurrent.Executors;
 
 import org.apache.mina.core.future.ConnectFuture;
@@ -18,9 +16,8 @@ import com.java.im.constant.Constant;
 import com.java.im.core.client.vo.ClientHeartbeat;
 import com.java.im.core.client.vo.ClientUtil;
 import com.java.im.core.filter.GlobalCharsetCodecFactory;
-import com.java.im.demo.ClientDemo;
+import com.java.im.core.model.DataPacket;
 import com.java.im.util.Debug;
-import com.java.im.util.PropertiesUtil;
 
 public class Client {
 
@@ -39,26 +36,6 @@ public class Client {
 	private ClientUtil util;
 	
 	private ClientHeartbeat hearbeat;
-	
-	
-	/**
-	 * 获取配置
-	 */
-	static {
-		String path = ClientDemo.class.getResource("/").getPath() 
-				+ "imconfigure.properties";
-		File file = new File(path);
-		if (file.exists()) {
-			Map<String, String> map = PropertiesUtil.getProperties(path);
-			Constant.SERVER_HOST = map.get("serverHost");
-			Constant.TEXT_PORT = Integer.valueOf(map.get("textPort"));
-			Constant.IMAGE_PORT = Integer.valueOf(map.get("imagePort"));
-			Constant.SERVER_BUFFER_SIZE = Integer.valueOf(map.get("bufferSize"));
-			Constant.SERVER_CACHE_SIZE = Integer.valueOf(map.get("cacheSize"));
-			Constant.IS_DEBUG = map.get("isDebug").equals("true");
-			Debug.println(Constant.DEBUG_INFO, "Read properties from configure file of customer");
-		}
-	}
 	
 	public Client() {
 	
@@ -99,7 +76,15 @@ public class Client {
 						throws Exception {
 					logger.info("message received from: "
 							+ session.getRemoteAddress());
-					messageHandler(message);
+					DataPacket packet = (DataPacket) message;
+					// if message packet
+					if (packet.getType().equals(Constant.TYPE_SEND)) {
+						messageHandler(packet);
+					}
+					// if login packet
+					else if (packet.getType().equals(Constant.TYPE_LOGIN)) {
+						loginHandler(packet);
+					}
 				}
 
 				@Override
@@ -182,10 +167,14 @@ public class Client {
 	}
 
 	public void close() {
-		if (connector.isActive())
-			connector.dispose();
-		connector = null;
-		hearbeat.userStop();
+		try {
+			if (connector.isActive())
+				connector.dispose();
+			connector = null;
+			hearbeat.userStop();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -275,11 +264,27 @@ public class Client {
 	 * override this method to write your service
 	 * </p>
 	 * 
-	 * @param message
+	 * @param packet
 	 * @throws Exception
 	 */
-	protected void messageHandler(Object message) throws Exception {
+	protected void messageHandler(DataPacket packet) throws Exception {
 
+	}
+	
+	
+	/**
+	 * <p>
+	 * login handler
+	 * </p>
+	 * <p>
+	 * override this method to write your service
+	 * </p>
+	 * 
+	 * @param packet
+	 * @throws Exception
+	 */
+	protected void loginHandler(DataPacket packet) throws Exception {
+		
 	}
 
 	/**
