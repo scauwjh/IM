@@ -268,7 +268,7 @@ public class Client {
 	 * @throws Exception
 	 */
 	protected void messageHandler(DataPacket packet) throws Exception {
-
+		
 	}
 	
 	
@@ -298,6 +298,6 @@ public class Client {
 	 * @param session
 	 */
 	public void closeSession(IoSession session) {
-
+		
 	}
 }

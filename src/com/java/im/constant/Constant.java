@@ -11,6 +11,8 @@ public class Constant {
 	public static final String TYPE_SEND = "sendType";
 	
 	public static final String TYPE_HEARTBEAT = "heartbeatType";
+
+	public static final String TYPE_RETURN = "returnType";
 	
 	public static final String SESSION_PORT = "sessionPort";
 	

@@ -52,6 +52,7 @@ public class ServerHandler extends IoHandlerAdapter {
 				if (!login.login(sender, token, address)) {
 					Debug.println(Constant.DEBUG_INFO, "Login failed");
 					packet.setStatus("0");
+					packet.setType(Constant.TYPE_RETURN);
 					session.write(packet);
 					return;
 				}
@@ -68,6 +69,7 @@ public class ServerHandler extends IoHandlerAdapter {
 				GlobalResource.userMap.put(sender, user);
 				// return packet
 				packet.setStatus("1");
+				packet.setType(Constant.TYPE_RETURN);
 				session.write(packet);
 				
 				Debug.println(Constant.DEBUG_INFO, "online count: " + GlobalResource.userMap.size());
@@ -96,6 +98,7 @@ public class ServerHandler extends IoHandlerAdapter {
 				String body = StringUtil.returnMessage(-1, "No login status");
 				packet.setStatus("0");
 				packet.setBody(body.getBytes(Constant.CHARSET));
+				packet.setType(Constant.TYPE_RETURN);
 				session.write(packet);
 				session.close(false);
 				return;

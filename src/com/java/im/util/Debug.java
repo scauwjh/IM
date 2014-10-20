@@ -21,6 +21,7 @@ public class Debug {
 			System.out.println("------" + debug[level] + ": " + value);
 		} else if(level < 3) {
 			System.out.println("------" + debug[level] + ": " + value);
+			logger.info("------" + debug[level] + ": " + value);
 		}
 			
 	}
@@ -29,6 +30,7 @@ public class Debug {
 		Exception exception = (Exception) e;
 		if (Constant.IS_DEBUG) {
 			exception.printStackTrace();
+			logger.error("------" + debug[level] + ": " + exception.getMessage());
 		}
 	}
 }

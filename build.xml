@@ -5,8 +5,8 @@
     <property name="src.dir" value="src"/>
     <property name="lib.dir" value="lib"/>
     <property name="conf.dir" value="conf"/>
-    <property name="client.main" value="com.java.im.running.ClientDemo"/>
-    <property name="server.main" value="com.java.im.running.ServerDemo"/>
+    <property name="client.main" value="com.java.im.demo.ClientDemo"/>
+    <property name="server.main" value="com.java.im.demo.ServerDemo"/>
     <property name="testclient.main" value="com.java.im.core.client.TestClient"/>
     <!-- locale jar packages -->
     <path id="lib-classpath">
@@ -14,17 +14,19 @@
             <include name="**/*.jar"/>
         </fileset>
     </path>
-    <!-- clean -->
-    <target name="clean">
-        <delete dir="${run.dir}"/>
-    </target>
     <!-- init -->
-    <target name="init" depends="clean">
+    <target name="init">
         <mkdir dir="${run.dir}"/>
         <mkdir dir="${classes.dir}"/>
     </target>
+    <!-- clean -->
+    <target name="clean"  depends="init">
+        <delete includeEmptyDirs="true">
+            <fileset dir="${run.dir}" includes="*"/>
+        </delete>
+    </target>
     <!-- compile -->
-    <target name="compile" depends="init">
+    <target name="compile" depends="clean">
         <javac srcdir="${src.dir}" destdir="${classes.dir}">
             <compilerarg line="-encoding UTF-8"/>
             <classpath refid="lib-classpath"/>
