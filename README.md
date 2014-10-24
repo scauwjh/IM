@@ -25,3 +25,6 @@
     重构了日志系统（采用log4j+slf4j），日志分析更清晰。
     编写了ANT编译所需的build.xml文件。
     修复了1.0的一些bug，修复了端口占用问题，添加了唯一登录用户的判断逻辑。
+
+## wiki：
+    https://github.com/scauwjh/IM/wiki/im_wiki
