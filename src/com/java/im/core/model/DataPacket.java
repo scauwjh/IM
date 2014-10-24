@@ -62,6 +62,11 @@ public class DataPacket {
 	 * <p>可以为文字消息（string转成byte[]）<br>
 	 * 或者语音、图片等（byte[]）</p>
 	 */
+	/**
+	 * 消息的唯一标识
+	 */
+	private String identification;
+	
 	private byte[] body;
 	
 	/**
@@ -79,7 +84,8 @@ public class DataPacket {
 			sb.append(status + "\n");
 			sb.append(contentType + "\n");
 			sb.append(timeStamp + "\n");
-			sb.append(parameters + "\n\n");
+			sb.append(parameters + "\n");
+			sb.append(identification + "\n\n");
 			packet.setHeader(sb.toString().getBytes(Constant.CHARSET));
 			packet.setBody(body);
 			return packet;
@@ -168,5 +174,15 @@ public class DataPacket {
 
 	public void setContentType(String contentType) {
 		this.contentType = contentType;
+	}
+
+
+	public String getIdentification() {
+		return identification;
+	}
+
+
+	public void setIdentification(String identification) {
+		this.identification = identification;
 	}
 }

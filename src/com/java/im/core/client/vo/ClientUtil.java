@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import com.java.im.constant.Constant;
 import com.java.im.core.model.DataPacket;
 import com.java.im.util.Debug;
+import com.java.im.util.StringUtil;
 
 public class ClientUtil {
 	
@@ -27,6 +28,8 @@ public class ClientUtil {
 			packet.setAccessToken(accessToken);
 			packet.setContentType(Constant.CONTENT_TYPE_LOGIN);
 			packet.setTimeStamp(new Date().toString());
+			Long ctime = System.currentTimeMillis();
+			packet.setIdentification(ctime.toString() + StringUtil.randString(6));
 			packet.setStatus("0");
 			// send login message
 			WriteFuture write = session.write(packet);
@@ -71,9 +74,9 @@ public class ClientUtil {
 	 * @param contentType
 	 * @param parameters
 	 * @param body
-	 * @return
+	 * @return DataPacket or null
 	 */
-	private Boolean sendData(IoSession session, String sender, String receiver, 
+	private DataPacket sendData(IoSession session, String sender, String receiver, 
 			String accessToken, String status, String contentType, String parameters, byte[] body) {
 		try {
 			DataPacket msg = new DataPacket();
@@ -85,19 +88,15 @@ public class ClientUtil {
 			msg.setContentType(contentType);
 			msg.setTimeStamp(new Date().toString());
 			msg.setParameters(parameters);
+			Long ctime = System.currentTimeMillis();
+			msg.setIdentification(ctime.toString() + StringUtil.randString(6));
 			msg.setBody(body);
-			WriteFuture write = session.write(msg);
-			if (!write.awaitUninterruptibly(Constant.MESSAGE_OVERTIME)) {
-				Debug.println(Constant.DEBUG_INFO, "Write overtime in sendDate");
-				return false;
-			}
-			if (write.isWritten())
-				return true;
-			return false;
+			session.write(msg);
+			return msg;
 		} catch (Exception e) {
 			logger.error("Send data error: " + e.getLocalizedMessage());
 			Debug.printStackTrace(Constant.DEBUG_INFO, e);
-			return false;
+			return null;
 		}
 	}
 	
@@ -110,9 +109,9 @@ public class ClientUtil {
 	 * @param accessToken
 	 * @param params
 	 * @param message
-	 * @return
+	 * @return DataPacket or null
 	 */
-	public Boolean sendMessage(IoSession session, String sender, String receiver,
+	public DataPacket sendMessage(IoSession session, String sender, String receiver,
 			String accessToken, String params, String message) {
 		try {
 			byte[] body = message.getBytes(Constant.CHARSET);
@@ -121,7 +120,7 @@ public class ClientUtil {
 		} catch (UnsupportedEncodingException e) {
 			logger.error("Send message error: " + e.getLocalizedMessage());
 			Debug.printStackTrace(Constant.DEBUG_INFO, e);
-			return false;
+			return null;
 		}
 	}
 	
@@ -131,9 +130,9 @@ public class ClientUtil {
 	 * @param account
 	 * @param accountToken
 	 * @param params
-	 * @return
+	 * @return DataPacket or null
 	 */
-	public Boolean sendHeartbeat(IoSession session, String account, 
+	public DataPacket sendHeartbeat(IoSession session, String account, 
 			String accessToken, String params) {
 		return sendData(session, account, account, accessToken, "1", 
 				Constant.CONTENT_TYPE_HEARTBEAT, params, null);
@@ -147,9 +146,9 @@ public class ClientUtil {
 	 * @param accessToken
 	 * @param params
 	 * @param file
-	 * @return
+	 * @return DataPacket or null
 	 */
-	public Boolean sendImage(IoSession session, String sender, 
+	public DataPacket sendImage(IoSession session, String sender, 
 			String receiver, String accessToken, String params, byte[] file) {
 		try {
 			return sendData(session, sender, receiver, accessToken, "1", 
@@ -157,7 +156,7 @@ public class ClientUtil {
 		} catch (Exception e) {
 			logger.error("Send image error: " + e.getLocalizedMessage());
 			Debug.printStackTrace(Constant.DEBUG_INFO, e);
-			return false;
+			return null;
 		}
 	}
 }

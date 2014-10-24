@@ -74,6 +74,10 @@ public class BytePacket {
 			begin = index;
 			index = header.indexOf('\n', begin + 1);
 			packet.setParameters(header.substring(begin + 1, index));
+			// identification
+			begin = index;
+			index = header.indexOf('\n', begin + 1);
+			packet.setIdentification(header.substring(begin + 1, index));
 			// body
 			packet.setBody(body);
 			return packet;

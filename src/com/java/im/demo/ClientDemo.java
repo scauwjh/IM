@@ -18,20 +18,20 @@ import com.java.im.util.PropertiesUtil;
 import com.java.im.util.StringUtil;
 
 public class ClientDemo extends Client {
-	
+
 	public static Integer errCount = 0;
-	
+
 	public static String account;
-	
+
 	public static String accessToken;
-	
+
 	public static ClientDemo client;
-	
+
 	/**
 	 * 获取配置
 	 */
 	static {
-		String path = ClientDemo.class.getResource("/").getPath() 
+		String path = ClientDemo.class.getResource("/").getPath()
 				+ "imconfigure.properties";
 		File file = new File(path);
 		if (file.exists()) {
@@ -39,13 +39,15 @@ public class ClientDemo extends Client {
 			Constant.SERVER_HOST = map.get("serverHost");
 			Constant.TEXT_PORT = Integer.valueOf(map.get("textPort"));
 			Constant.IMAGE_PORT = Integer.valueOf(map.get("imagePort"));
-			Constant.SERVER_BUFFER_SIZE = Integer.valueOf(map.get("bufferSize"));
+			Constant.SERVER_BUFFER_SIZE = Integer
+					.valueOf(map.get("bufferSize"));
 			Constant.SERVER_CACHE_SIZE = Integer.valueOf(map.get("cacheSize"));
 			Constant.IS_DEBUG = map.get("isDebug").equals("true");
-			Debug.println(Constant.DEBUG_INFO, "Read properties from configure file of customer");
+			Debug.println(Constant.DEBUG_INFO,
+					"Read properties from configure file of customer");
 		}
 	}
-	
+
 	/**
 	 * 重写数据接收的方法
 	 */
@@ -58,12 +60,14 @@ public class ClientDemo extends Client {
 			System.out.println("Content type: " + packet.getContentType());
 			System.out.println("TimeStamp: " + packet.getTimeStamp());
 			if (packet.getContentType().equals(Constant.CONTENT_TYPE_IMAGE)) {
-				String file = "C:\\Users\\kei\\Desktop\\rec-(" + account + ")-from-(" + packet.getSender() + ")" 
-						+ StringUtil.randString(5)  + ".jpg";
+				String file = "C:\\Users\\kei\\Desktop\\rec-(" + account
+						+ ")-from-(" + packet.getSender() + ")"
+						+ StringUtil.randString(5) + ".jpg";
 				FileOutputStream out = new FileOutputStream(file);
 				out.write(packet.getBody());
 				out.close();
-			} else if (packet.getContentType().equals(Constant.CONTENT_TYPE_MESSAGE)) {
+			} else if (packet.getContentType().equals(
+					Constant.CONTENT_TYPE_MESSAGE)) {
 				String body = new String(packet.getBody(), Constant.CHARSET);
 				System.out.println("Received message: " + body);
 			}
@@ -71,7 +75,14 @@ public class ClientDemo extends Client {
 			e.printStackTrace();
 		}
 	}
-	
+
+	@Override
+	public void returnHandler(DataPacket packet) {
+		System.out.println("------message is sent, and return status is: "
+						+ packet.getStatus() + ", id is: "
+						+ packet.getIdentification());
+	}
+
 	/**
 	 * 重写session关闭的方法
 	 */
@@ -92,13 +103,12 @@ public class ClientDemo extends Client {
 			System.out.println("login again: " + ++count);
 		}
 	}
-	
-	
+
 	public static void main(String[] args) throws Exception {
 		client = new ClientDemo();
 		if (!client.initClient(null)) {
 			System.out.println("Failed to init client!");
-			
+
 			return;
 		}
 		Scanner in = new Scanner(System.in);
@@ -112,9 +122,9 @@ public class ClientDemo extends Client {
 			client.close();
 			return;
 		}
-		
+
 		// send message service
-		while(true) {
+		while (true) {
 			System.out.println("enter name message or exit: ");
 			String receiver = in.next();
 			if (receiver.equals("exit")) {
@@ -128,10 +138,10 @@ public class ClientDemo extends Client {
 				InputStream inputStream;
 				inputStream = new FileInputStream(path);
 				byte[] dst = ImageUtil.imageCompress(inputStream, 0.9, 1.0);
-				if (!client.sendImage(account, receiver, accessToken, "params", dst)) {
-					System.out.println("Failed to send image");
-					client.login(Client.imageSession, account, accessToken);
-				}
+				DataPacket dp = client.sendImage(account, receiver,
+						accessToken, "params", dst);
+				System.out.println("----- image sent with id: "
+						+ dp.getIdentification());
 				continue;
 			}
 			if (message.equals("close")) {
@@ -141,10 +151,10 @@ public class ClientDemo extends Client {
 				client.initLogin(account, accessToken);
 				continue;
 			}
-			if (!client.sendMessage(account, receiver, accessToken, "params", message)){
-				System.out.println("Failed to send message");
-				client.login(Client.textSession, account, accessToken);
-			}
+			DataPacket dp = client.sendMessage(account, receiver, accessToken,
+					"params", message);
+			System.out.println("----- message sent with id: "
+					+ dp.getIdentification());
 		}
 		in.close();
 	}

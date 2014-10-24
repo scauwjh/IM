@@ -20,6 +20,8 @@ public class Constant {
 	
 	public static final String CONTENT_TYPE_MESSAGE = "contentTypeMessage";
 	
+	public static final String CONTENT_TYPE_JSON = "contentTypeJson";
+	
 	public static final String CONTENT_TYPE_IMAGE = "contentTypeImage";
 	
 	public static final String CONTENT_TYPE_LOGIN = "contentTypeLogin";
@@ -29,6 +31,12 @@ public class Constant {
 	public static final String CHARSET = "UTF-8";
 	
 	public static final String SERVER_NAME = "#UFRIEND_SERVER#";
+	
+	public static final String STATUS_ERROR = "-1";
+	
+	public static final String STATUS_SUCCESS = "0";
+	
+	public static final String STATUS_OFFLINE = "1";
 	
 	public static final Integer DEBUG_ERROR = 0;
 	

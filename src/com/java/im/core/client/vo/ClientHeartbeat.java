@@ -27,12 +27,12 @@ public class ClientHeartbeat extends Thread {
 				e.printStackTrace();
 			}
 			if (Client.textSession.write(dp).awaitUninterruptibly(Constant.HEARTBEAT_TIMEOUT)) {
-				logger.warn("Heartbeat of text session is sent");
+				logger.info("Heartbeat of text session is sent");
 			} else {
 				logger.warn("Heartbeat overtime at text session");
 			}
 			if (Client.imageSession.write(dp).awaitUninterruptibly(Constant.HEARTBEAT_TIMEOUT)) {
-				logger.warn("Heartbeat of image session is sent");
+				logger.info("Heartbeat of image session is sent");
 			} else {
 				logger.warn("Heartbeat overtime at image session");
 			}

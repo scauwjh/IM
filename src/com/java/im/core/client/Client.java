@@ -84,6 +84,9 @@ public class Client {
 					// if login packet
 					else if (packet.getType().equals(Constant.TYPE_LOGIN)) {
 						loginHandler(packet);
+					} 
+					else if (packet.getType().equals(Constant.TYPE_RETURN)) {
+						returnHandler(packet);
 					}
 				}
 
@@ -229,9 +232,9 @@ public class Client {
 	 * @param accessToken
 	 * @param params
 	 * @param message
-	 * @return
+	 * @return DataPacket or null
 	 */
-	public Boolean sendMessage(String sender, String receiver,
+	public DataPacket sendMessage(String sender, String receiver,
 			String accessToken, String params, String message) {
 		return util.sendMessage(textSession, sender, receiver, accessToken,
 				params, message);
@@ -245,9 +248,9 @@ public class Client {
 	 * @param accessToken
 	 * @param params
 	 * @param filePath
-	 * @return
+	 * @return DataPacket or null
 	 */
-	public boolean sendImage(String sender, String receiver,
+	public DataPacket sendImage(String sender, String receiver,
 			String accessToken, String params, byte[] file) {
 		return util.sendImage(imageSession, sender, receiver, accessToken,
 				params, file);
@@ -284,6 +287,21 @@ public class Client {
 	 * @throws Exception
 	 */
 	protected void loginHandler(DataPacket packet) throws Exception {
+		
+	}
+	
+	/**
+	 * <p>
+	 * return message handler
+	 * </p>
+	 * <p>
+	 * override this method to write your service
+	 * </p>
+	 * 
+	 * @param packet
+	 * @throws Exception
+	 */
+	protected void returnHandler(DataPacket packet) throws Exception {
 		
 	}
 
