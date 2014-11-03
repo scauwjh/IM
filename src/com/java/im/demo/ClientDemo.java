@@ -32,7 +32,7 @@ public class ClientDemo extends Client {
 	 */
 	static {
 		String path = ClientDemo.class.getResource("/").getPath()
-				+ "imconfigure.properties";
+				+ "im.properties";
 		File file = new File(path);
 		if (file.exists()) {
 			Map<String, String> map = PropertiesUtil.getProperties(path);

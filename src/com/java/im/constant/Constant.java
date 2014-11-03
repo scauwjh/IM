@@ -46,6 +46,8 @@ public class Constant {
 	
 	public static final Integer DEBUG_DEBUG = 3;
 	
+	public static final String MESSAGE_QUEUE = "messageQueue";
+	
 	/**
 	 * server heart beat timeout 240s
 	 */
@@ -99,7 +101,7 @@ public class Constant {
 	/**
 	 * default server cache size 100000
 	 */
-	public static Integer SERVER_CACHE_SIZE = 100000;
+	public static Integer SERVER_CACHE_SIZE = 10000;
 	/**
 	 * default isDebug true
 	 */

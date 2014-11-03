@@ -34,7 +34,7 @@ public class Server {
 	 */
 	static {
 		String path = Server.class.getResource("/").getPath()
-				+ "imconfigure.properties";
+				+ "im.properties";
 		File file = new File(path);
 		if (file.exists()) {
 			Map<String, String> map = PropertiesUtil.getProperties(path);

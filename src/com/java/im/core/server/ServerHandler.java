@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import net.sf.ehcache.Element;
+
 import org.apache.mina.core.service.IoHandlerAdapter;
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
@@ -18,7 +20,6 @@ import com.java.im.constant.GlobalResource;
 import com.java.im.core.model.DataPacket;
 import com.java.im.core.model.User;
 import com.java.im.core.service.Login;
-import com.java.im.core.service.OfflineMessage;
 import com.java.im.util.AddressUtil;
 import com.java.im.util.Debug;
 import com.java.im.util.StringUtil;
@@ -142,19 +143,18 @@ public class ServerHandler extends IoHandlerAdapter {
 	 * @param sender
 	 */
 	private void sendOfflineMessage(IoSession session, String sender) {
-		// send offline message, message from cache or DB
-		List<Object> cacheMsg = GlobalResource.messageQueue.get(sender);
-		if (cacheMsg != null) {
-			Debug.println(Constant.DEBUG_INFO, "Offline message list size: "
-					+ cacheMsg.size());
-			for (int i = 0; i < cacheMsg.size(); i++) {
-				session.write(cacheMsg.get(i));
-			}
-		}
-		List<Object> dbMsg = new OfflineMessage().getOfflineMessage();
-		if (dbMsg != null) {
-			for (int i = 0; i < dbMsg.size(); i++) {
-				session.write(dbMsg.get(i));
+		// send offline message
+		synchronized (this) {
+			Element msgElement = GlobalResource.messageCache.get(sender);
+			if (msgElement != null) {
+				@SuppressWarnings("unchecked")
+				List<Object> msgList = (List<Object>) msgElement.getObjectValue();
+				Debug.println(Constant.DEBUG_INFO, "Offline message list size: "
+						+ msgList.size());
+				for (int i = 0; i < msgList.size(); i++) {
+					session.write(msgList.get(i));
+				}
+				GlobalResource.messageCache.remove(sender);
 			}
 		}
 	}
@@ -165,6 +165,7 @@ public class ServerHandler extends IoHandlerAdapter {
 	 * @param session
 	 * @param packet
 	 */
+	@SuppressWarnings("unchecked")
 	private void sendMessage(IoSession session, DataPacket packet) {
 		// get the session of receiver
 		Integer toPort = AddressUtil.getLocalPort(session);
@@ -207,14 +208,20 @@ public class ServerHandler extends IoHandlerAdapter {
 			// not online
 			Debug.println(Constant.DEBUG_DEBUG, "Receiver " + receiver
 					+ " not online");
-			List<Object> list = GlobalResource.messageQueue.get(receiver);
-			if (list == null) {
-				list = new ArrayList<Object>();
-				Debug.println(Constant.DEBUG_DEBUG, "list is null");
+			synchronized (this) {
+				Element msgElement = GlobalResource.messageCache.get(sender);
+				List<Object> list = null;
+				if (msgElement == null) {
+					list = new ArrayList<Object>();
+					list.add(packet);
+					msgElement = new Element(sender, list);
+					GlobalResource.messageCache.put(msgElement);
+					Debug.println(Constant.DEBUG_DEBUG, "list is null");
+				} else {
+					list = (List<Object>) msgElement.getObjectValue();
+					list.add(packet);
+				}
 			}
-			list.add(packet);
-			// save tomessageQueue
-			GlobalResource.messageQueue.put(receiver, list);
 		}
 	}
 

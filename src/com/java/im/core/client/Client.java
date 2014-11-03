@@ -315,7 +315,7 @@ public class Client {
 	 * 
 	 * @param session
 	 */
-	public void closeSession(IoSession session) {
+	protected void closeSession(IoSession session) throws Exception {
 		
 	}
 }

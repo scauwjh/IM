@@ -31,9 +31,13 @@ public class DataPacket {
 	 */
 	private String accessToken;
 	/**
-	 * <b>登录状态，服务器返回</b>
+	 * <b>登录状态 or 消息状态，服务器返回</b>
+	 * <p>登录：</p>
 	 * <p>0 is login failed</p>
 	 * <p>1 is login succeed</p>
+	 * <p>消息：</p>
+	 * <p>0 is success</p>
+	 * <p>1 is user is not online</p>
 	 */
 	private String status;
 	/**
@@ -58,15 +62,17 @@ public class DataPacket {
 	 */
 	private String parameters;
 	/**
+	 * <b>消息的唯一标识</b>
+	 * <p>每一条消息的唯一标识<br>
+	 * 消息回调时可以用来确定属于哪一条消息<br>
+	 * </p>
+	 */
+	private String identification;
+	/**
 	 * <b>客户端消息主体</b>
 	 * <p>可以为文字消息（string转成byte[]）<br>
 	 * 或者语音、图片等（byte[]）</p>
 	 */
-	/**
-	 * 消息的唯一标识
-	 */
-	private String identification;
-	
 	private byte[] body;
 	
 	/**
