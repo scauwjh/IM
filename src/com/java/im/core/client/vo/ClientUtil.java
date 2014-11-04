@@ -25,6 +25,7 @@ public class ClientUtil {
 			DataPacket packet = new DataPacket();
 			packet.setType(Constant.TYPE_LOGIN);
 			packet.setSender(account);
+			packet.setReceiver(Constant.SERVER_NAME);
 			packet.setAccessToken(accessToken);
 			packet.setContentType(Constant.CONTENT_TYPE_LOGIN);
 			packet.setTimeStamp(new Date().toString());

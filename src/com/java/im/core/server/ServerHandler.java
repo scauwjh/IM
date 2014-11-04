@@ -45,14 +45,15 @@ public class ServerHandler extends IoHandlerAdapter {
 			throws Exception {
 		if (message instanceof DataPacket) {
 			DataPacket packet = (DataPacket) message;
+			String sender = packet.getSender();
+			String type = packet.getType();
 			// update time stamp
 			packet.setTimeStamp(new Date().toString());
-			String type = packet.getType();
 			// login
 			if (type.equals(Constant.TYPE_LOGIN)) {
 				if (!login(session, packet))
 					return;
-				sendOfflineMessage(session, packet.getSender());
+				sendOfflineMessage(session, sender);
 			}
 			// check login status
 			if (!checkLoginStatus(session, packet))
@@ -140,21 +141,24 @@ public class ServerHandler extends IoHandlerAdapter {
 	 * send offline message
 	 * 
 	 * @param session
-	 * @param sender
+	 * @param user
 	 */
-	private void sendOfflineMessage(IoSession session, String sender) {
+	private void sendOfflineMessage(IoSession session, String user) {
 		// send offline message
 		synchronized (this) {
-			Element msgElement = GlobalResource.messageCache.get(sender);
+			Debug.println(Constant.DEBUG_DEBUG, "get offile message: " + user);
+			Element msgElement = GlobalResource.messageCache.get(user);
 			if (msgElement != null) {
 				@SuppressWarnings("unchecked")
-				List<Object> msgList = (List<Object>) msgElement.getObjectValue();
+				List<DataPacket> msgList = (List<DataPacket>) msgElement.getObjectValue();
 				Debug.println(Constant.DEBUG_INFO, "Offline message list size: "
 						+ msgList.size());
 				for (int i = 0; i < msgList.size(); i++) {
+					Debug.println(Constant.DEBUG_INFO, "offline message sender: "
+							+ msgList.get(i).getSender() + " receover: " + msgList.get(i).getReceiver());
 					session.write(msgList.get(i));
 				}
-				GlobalResource.messageCache.remove(sender);
+				GlobalResource.messageCache.remove(user);
 			}
 		}
 	}
@@ -183,21 +187,11 @@ public class ServerHandler extends IoHandlerAdapter {
 			// send message
 			sendSess.write(packet);
 			// return status to sender
-			packet.setType(Constant.TYPE_RETURN);
-			packet.setReceiver(sender);
-			packet.setStatus(Constant.STATUS_SUCCESS);
-			packet.setSender(Constant.SERVER_NAME + toPort);
-			packet.setBody(null);
-			session.write(packet);
+			session.write(createReturnPacket(sender, Constant.STATUS_SUCCESS));
 			return;
 		} else {
 			// return status to sender
-			packet.setType(Constant.TYPE_RETURN);
-			packet.setReceiver(sender);
-			packet.setStatus(Constant.STATUS_OFFLINE);
-			packet.setSender(Constant.SERVER_NAME + toPort);
-			packet.setBody(null);
-			session.write(packet);
+			session.write(createReturnPacket(sender, Constant.STATUS_OFFLINE));
 			
 			if (sendSess != null) {
 				// remove user?
@@ -209,20 +203,31 @@ public class ServerHandler extends IoHandlerAdapter {
 			Debug.println(Constant.DEBUG_DEBUG, "Receiver " + receiver
 					+ " not online");
 			synchronized (this) {
-				Element msgElement = GlobalResource.messageCache.get(sender);
-				List<Object> list = null;
+				Element msgElement = GlobalResource.messageCache.get(receiver);
+				List<DataPacket> list = null;
 				if (msgElement == null) {
-					list = new ArrayList<Object>();
+					Debug.println(Constant.DEBUG_DEBUG, "element is null");
+					list = new ArrayList<DataPacket>();
 					list.add(packet);
-					msgElement = new Element(sender, list);
+					msgElement = new Element(receiver, list);
 					GlobalResource.messageCache.put(msgElement);
-					Debug.println(Constant.DEBUG_DEBUG, "list is null");
 				} else {
-					list = (List<Object>) msgElement.getObjectValue();
+					Debug.println(Constant.DEBUG_DEBUG, "element is not null");
+					list = (List<DataPacket>) msgElement.getObjectValue();
 					list.add(packet);
 				}
 			}
 		}
+	}
+	
+	private DataPacket createReturnPacket(String receiver, String status) {
+		DataPacket dp = new DataPacket();
+		dp.setType(Constant.TYPE_RETURN);
+		dp.setReceiver(receiver);
+		dp.setStatus(status);
+		dp.setSender(Constant.SERVER_NAME);
+		dp.setBody(null);
+		return dp;
 	}
 
 	/**
