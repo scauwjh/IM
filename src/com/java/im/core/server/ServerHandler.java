@@ -150,12 +150,16 @@ public class ServerHandler extends IoHandlerAdapter {
 			Element msgElement = GlobalResource.messageCache.get(user);
 			if (msgElement != null) {
 				@SuppressWarnings("unchecked")
-				List<DataPacket> msgList = (List<DataPacket>) msgElement.getObjectValue();
-				Debug.println(Constant.DEBUG_INFO, "Offline message list size: "
-						+ msgList.size());
+				List<DataPacket> msgList = (List<DataPacket>) msgElement
+						.getObjectValue();
+				Debug.println(Constant.DEBUG_INFO,
+						"Offline message list size: " + msgList.size());
 				for (int i = 0; i < msgList.size(); i++) {
-					Debug.println(Constant.DEBUG_INFO, "offline message sender: "
-							+ msgList.get(i).getSender() + " receover: " + msgList.get(i).getReceiver());
+					Debug.println(Constant.DEBUG_INFO,
+							"offline message sender: "
+									+ msgList.get(i).getSender()
+									+ " receover: "
+									+ msgList.get(i).getReceiver());
 					session.write(msgList.get(i));
 				}
 				GlobalResource.messageCache.remove(user);
@@ -175,6 +179,7 @@ public class ServerHandler extends IoHandlerAdapter {
 		Integer toPort = AddressUtil.getLocalPort(session);
 		String receiver = packet.getReceiver();
 		String sender = packet.getSender();
+		String identification = packet.getIdentification();
 		User toUser = GlobalResource.userMap.get(receiver);
 		IoSession sendSess = null;
 
@@ -187,12 +192,14 @@ public class ServerHandler extends IoHandlerAdapter {
 			// send message
 			sendSess.write(packet);
 			// return status to sender
-			session.write(createReturnPacket(sender, Constant.STATUS_SUCCESS));
+			session.write(createReturnPacket(sender, Constant.STATUS_SUCCESS,
+					identification));
 			return;
 		} else {
 			// return status to sender
-			session.write(createReturnPacket(sender, Constant.STATUS_OFFLINE));
-			
+			session.write(createReturnPacket(sender, Constant.STATUS_OFFLINE,
+					identification));
+
 			if (sendSess != null) {
 				// remove user?
 				GlobalResource.userMap.remove(receiver);
@@ -219,13 +226,15 @@ public class ServerHandler extends IoHandlerAdapter {
 			}
 		}
 	}
-	
-	private DataPacket createReturnPacket(String receiver, String status) {
+
+	private DataPacket createReturnPacket(String receiver, String status,
+			String identification) {
 		DataPacket dp = new DataPacket();
 		dp.setType(Constant.TYPE_RETURN);
 		dp.setReceiver(receiver);
 		dp.setStatus(status);
 		dp.setSender(Constant.SERVER_NAME);
+		dp.setIdentification(identification);
 		dp.setBody(null);
 		return dp;
 	}

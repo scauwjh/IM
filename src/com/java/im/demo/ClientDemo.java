@@ -78,7 +78,8 @@ public class ClientDemo extends Client {
 
 	@Override
 	public void returnHandler(DataPacket packet) {
-		System.out.println("------message is sent, and return status is: "
+		System.out.println("#####" + packet.getType() + " " + packet.getAccessToken());
+		System.out.println("##### message is sent, and return status is: "
 						+ packet.getStatus() + ", id is: "
 						+ packet.getIdentification());
 	}
